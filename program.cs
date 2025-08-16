@@ -114,7 +114,7 @@ internal static class Program
     {
         try
         {
-            var el = Automation.FocusedElement;
+            var el = AutomationElement.FocusedElement;
             if (el is null || !PassesFilter(el)) return;
 
             var name = Safe(el, AutomationElement.NameProperty);
