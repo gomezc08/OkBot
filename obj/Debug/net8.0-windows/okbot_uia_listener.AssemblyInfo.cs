@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("okbot_uia_listener")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2022b26bfbe091c269281ee70c71531a31f6772d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+add2f9f0309363f1c460df6ace804ca53cb4cf9f")]
 [assembly: System.Reflection.AssemblyProductAttribute("okbot_uia_listener")]
 [assembly: System.Reflection.AssemblyTitleAttribute("okbot_uia_listener")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
