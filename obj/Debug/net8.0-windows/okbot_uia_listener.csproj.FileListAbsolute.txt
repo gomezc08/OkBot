@@ -1,0 +1,15 @@
+C:\Users\kimig\OneDrive - The George Washington University\OkBot\bin\Debug\net8.0-windows\okbot_uia_listener.exe
+C:\Users\kimig\OneDrive - The George Washington University\OkBot\bin\Debug\net8.0-windows\okbot_uia_listener.deps.json
+C:\Users\kimig\OneDrive - The George Washington University\OkBot\bin\Debug\net8.0-windows\okbot_uia_listener.runtimeconfig.json
+C:\Users\kimig\OneDrive - The George Washington University\OkBot\bin\Debug\net8.0-windows\okbot_uia_listener.dll
+C:\Users\kimig\OneDrive - The George Washington University\OkBot\bin\Debug\net8.0-windows\okbot_uia_listener.pdb
+C:\Users\kimig\OneDrive - The George Washington University\OkBot\obj\Debug\net8.0-windows\okbot_uia_listener.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\kimig\OneDrive - The George Washington University\OkBot\obj\Debug\net8.0-windows\okbot_uia_listener.AssemblyInfoInputs.cache
+C:\Users\kimig\OneDrive - The George Washington University\OkBot\obj\Debug\net8.0-windows\okbot_uia_listener.AssemblyInfo.cs
+C:\Users\kimig\OneDrive - The George Washington University\OkBot\obj\Debug\net8.0-windows\okbot_uia_listener.csproj.CoreCompileInputs.cache
+C:\Users\kimig\OneDrive - The George Washington University\OkBot\obj\Debug\net8.0-windows\okbot_uia_listener.sourcelink.json
+C:\Users\kimig\OneDrive - The George Washington University\OkBot\obj\Debug\net8.0-windows\okbot_uia_listener.dll
+C:\Users\kimig\OneDrive - The George Washington University\OkBot\obj\Debug\net8.0-windows\refint\okbot_uia_listener.dll
+C:\Users\kimig\OneDrive - The George Washington University\OkBot\obj\Debug\net8.0-windows\okbot_uia_listener.pdb
+C:\Users\kimig\OneDrive - The George Washington University\OkBot\obj\Debug\net8.0-windows\okbot_uia_listener.genruntimeconfig.cache
+C:\Users\kimig\OneDrive - The George Washington University\OkBot\obj\Debug\net8.0-windows\ref\okbot_uia_listener.dll

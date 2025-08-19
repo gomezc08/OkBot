@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "pDanssE3gaI=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\kimig\\OneDrive - The George Washington University\\OkBot\\okbot_uia_listener.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\kimig\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.19\\microsoft.netcore.app.ref.8.0.19.nupkg.sha512",
+    "C:\\Users\\kimig\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.19\\microsoft.windowsdesktop.app.ref.8.0.19.nupkg.sha512",
+    "C:\\Users\\kimig\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.19\\microsoft.aspnetcore.app.ref.8.0.19.nupkg.sha512",
+    "C:\\Users\\kimig\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\8.0.19\\microsoft.netcore.app.host.win-x64.8.0.19.nupkg.sha512"
+  ],
+  "logs": []
+}
