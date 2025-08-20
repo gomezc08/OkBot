@@ -1,5 +1,3 @@
-**/bin/**
-**/obj/**
-src/create_json_schema/resources/uia_log_*.json
-src/create_json_schema/resources/uia_schema_log_*.json
-**/.env*
+src/uia_listener/bin/
+src/uia_listener/obj/ 
+*.env
