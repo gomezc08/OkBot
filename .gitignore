@@ -1,4 +1,4 @@
-bin/
-obj/
-resources/
+**/bin/
+**/obj/
+src/create_json_schema/resources/
 .env
