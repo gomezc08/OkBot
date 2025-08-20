@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Threading;
 using System.Windows.Automation;
 
@@ -7,6 +10,10 @@ internal static class Program
 {
     // Optional: filter to the current foreground process only
     private static int _foregroundPidFilter = 0;
+
+    // In-memory event log to persist on exit
+    private static readonly List<LogEvent> _eventLog = new();
+    private static readonly object _eventLogLock = new();
 
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
@@ -19,6 +26,12 @@ internal static class Program
     {
         Console.WriteLine("UIA event listener starting...");
         Console.WriteLine("Press ENTER to toggle 'foreground app only' filter. Press Ctrl+C to exit.\n");
+
+        // Ensure we also persist logs on process exit (in case of window close/shutdown)
+        AppDomain.CurrentDomain.ProcessExit += (s, e) =>
+        {
+            try { WriteEventLogToJson(); } catch { }
+        };
 
         // Start with no filter (listen to the whole desktop)
         SetForegroundPidFilter(enabled: false);
@@ -74,6 +87,7 @@ internal static class Program
         // Cleanup on exit
         Automation.RemoveAutomationFocusChangedEventHandler(OnFocusChanged);
         Automation.RemoveAllEventHandlers();
+        WriteEventLogToJson();
         Console.WriteLine("UIA event listener stopped.");
     }
 
@@ -122,6 +136,16 @@ internal static class Program
             var className = Safe(el, AutomationElement.ClassNameProperty);
 
             Console.WriteLine($"[Focus] {controlType}  Name='{name}'  Class='{className}'  PID={SafePid(el)}");
+
+            AddLogEvent(new LogEvent
+            {
+                EventType = "Focus",
+                TimestampUtc = DateTime.UtcNow,
+                ControlType = controlType,
+                Name = name,
+                ClassName = className,
+                ProcessId = SafePid(el)
+            });
         }
         catch (Exception ex)
         {
@@ -137,7 +161,18 @@ internal static class Program
 
             var name = Safe(el, AutomationElement.NameProperty);
             var controlType = SafeControlType(el);
+            var className = Safe(el, AutomationElement.ClassNameProperty);
             Console.WriteLine($"[Invoke] {controlType}  Name='{name}'  PID={SafePid(el)}");
+
+            AddLogEvent(new LogEvent
+            {
+                EventType = "Invoke",
+                TimestampUtc = DateTime.UtcNow,
+                ControlType = controlType,
+                Name = name,
+                ClassName = className,
+                ProcessId = SafePid(el)
+            });
         }
         catch (Exception ex)
         {
@@ -151,7 +186,21 @@ internal static class Program
         {
             if (src is not AutomationElement el || !PassesFilter(el)) return;
 
-            Console.WriteLine($"[Structure] {e.StructureChangeType}  On '{Safe(el, AutomationElement.NameProperty)}'  PID={SafePid(el)}");
+            var name = Safe(el, AutomationElement.NameProperty);
+            var controlType = SafeControlType(el);
+            var className = Safe(el, AutomationElement.ClassNameProperty);
+            Console.WriteLine($"[Structure] {e.StructureChangeType}  On '{name}'  PID={SafePid(el)}");
+
+            AddLogEvent(new LogEvent
+            {
+                EventType = "StructureChanged",
+                TimestampUtc = DateTime.UtcNow,
+                ControlType = controlType,
+                Name = name,
+                ClassName = className,
+                ProcessId = SafePid(el),
+                StructureChangeType = e.StructureChangeType.ToString()
+            });
         }
         catch (Exception ex)
         {
@@ -167,7 +216,22 @@ internal static class Program
 
             var propName = e.Property.ProgrammaticName;
             var newVal = e.NewValue;
-            Console.WriteLine($"[PropertyChanged] {propName} -> {newVal}  (Name='{Safe(el, AutomationElement.NameProperty)}' PID={SafePid(el)})");
+            var name = Safe(el, AutomationElement.NameProperty);
+            var controlType = SafeControlType(el);
+            var className = Safe(el, AutomationElement.ClassNameProperty);
+            Console.WriteLine($"[PropertyChanged] {propName} -> {newVal}  (Name='{name}' PID={SafePid(el)})");
+
+            AddLogEvent(new LogEvent
+            {
+                EventType = "PropertyChanged",
+                TimestampUtc = DateTime.UtcNow,
+                ControlType = controlType,
+                Name = name,
+                ClassName = className,
+                ProcessId = SafePid(el),
+                PropertyName = propName,
+                NewValue = newVal
+            });
         }
         catch (Exception ex)
         {
@@ -204,5 +268,61 @@ internal static class Program
             return v is int i ? i : -1;
         }
         catch { return -1; }
+    }
+
+    private static void AddLogEvent(LogEvent logEvent)
+    {
+        lock (_eventLogLock)
+        {
+            _eventLog.Add(logEvent);
+        }
+    }
+
+    private static void WriteEventLogToJson()
+    {
+        try
+        {
+            var targetDir = GetResourcesDirectory();
+            Directory.CreateDirectory(targetDir);
+            var fileName = $"schema_log_{DateTime.UtcNow:yyyyMMdd_HHmmss}.json";
+            var filePath = Path.Combine(targetDir, fileName);
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            List<LogEvent> snapshot;
+            lock (_eventLogLock)
+            {
+                snapshot = new List<LogEvent>(_eventLog);
+            }
+            File.WriteAllText(filePath, JsonSerializer.Serialize(snapshot, options));
+            Console.WriteLine($"Saved UIA log to: {filePath}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SaveLog][ERR] {ex.Message}");
+        }
+    }
+
+    private static string GetResourcesDirectory()
+    {
+        var baseDir = AppContext.BaseDirectory; // .../src/uia_listener/bin/Debug/net8.0-windows/
+        var uiaProjectDir = Directory.GetParent(baseDir)?.Parent?.Parent?.Parent?.FullName; // -> .../src/uia_listener
+        var srcDir = Directory.GetParent(uiaProjectDir ?? string.Empty)?.FullName; // -> .../src
+        if (string.IsNullOrEmpty(srcDir))
+        {
+            return Path.Combine(baseDir, "resources");
+        }
+        return Path.Combine(srcDir, "create_json_schema", "resources");
+    }
+
+    private class LogEvent
+    {
+        public string EventType { get; set; } = string.Empty;
+        public DateTime TimestampUtc { get; set; }
+        public string ControlType { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string ClassName { get; set; } = string.Empty;
+        public int ProcessId { get; set; }
+        public string? PropertyName { get; set; }
+        public object? NewValue { get; set; }
+        public string? StructureChangeType { get; set; }
     }
 }
