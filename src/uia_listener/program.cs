@@ -284,7 +284,7 @@ internal static class Program
         {
             var targetDir = GetResourcesDirectory();
             Directory.CreateDirectory(targetDir);
-            var fileName = $"schema_log_{DateTime.UtcNow:yyyyMMdd_HHmmss}.json";
+            var fileName = $"uia_schema_log_{DateTime.UtcNow:yyyyMMdd_HHmmss}.json";
             var filePath = Path.Combine(targetDir, fileName);
             var options = new JsonSerializerOptions { WriteIndented = true };
             List<LogEvent> snapshot;

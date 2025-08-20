@@ -1,4 +1,4 @@
-src/uia_listenerbin/
-src/uia_listener/obj/
+bin/
+obj/
 resources/
 .env
