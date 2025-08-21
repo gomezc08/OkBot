@@ -1,3 +1,7 @@
+/**
+ * This program records UI Automation events from the user's desktop and persists them to a JSON file.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -284,7 +288,7 @@ internal static class Program
         {
             var targetDir = GetResourcesDirectory();
             Directory.CreateDirectory(targetDir);
-            var fileName = $"uia_schema_log_{DateTime.UtcNow:yyyyMMdd_HHmmss}.json";
+            var fileName = "uia_log.json";
             var filePath = Path.Combine(targetDir, fileName);
             var options = new JsonSerializerOptions { WriteIndented = true };
             List<LogEvent> snapshot;
