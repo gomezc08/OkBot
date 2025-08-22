@@ -179,13 +179,13 @@ class UIA_Recorder_UI:
     def stop_recording(self):
         if self.recording_process:
             try:
-                # Try to send Ctrl+C signal first (this allows the UIA listener to save the log)
+                # Try to send Ctrl+Break signal first (this allows the UIA listener to save the log)
                 if hasattr(self.recording_process, 'send_signal'):
                     import signal
                     try:
-                        # On Windows, try to send CTRL_C_EVENT
-                        self.recording_process.send_signal(signal.CTRL_C_EVENT)
-                        self.preview_text.insert(tk.END, "Sent Ctrl+C signal to UIA listener...\n")
+                        # On Windows, try to send CTRL_BREAK_EVENT (more reliable than CTRL_C_EVENT)
+                        self.recording_process.send_signal(signal.CTRL_BREAK_EVENT)
+                        self.preview_text.insert(tk.END, "Sent Ctrl+Break signal to UIA listener...\n")
                     except (AttributeError, OSError):
                         # Fallback to terminate
                         self.recording_process.terminate()
