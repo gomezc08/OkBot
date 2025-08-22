@@ -1,0 +1,21 @@
+# OkBot Project Dependencies
+# Core dependencies for UIA automation and JSON schema generation
+
+# OpenAI API client
+openai>=1.0.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# Standard library packages (included with Python 3.7+)
+# - json
+# - os
+# - sys
+# - pathlib
+# - typing
+
+# Development and testing (optional)
+# pytest>=7.0.0
+# black>=23.0.0
+# flake8>=6.0.0
+# mypy>=1.0.0

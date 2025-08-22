@@ -2,3 +2,5 @@ src/uia_listener/bin/
 src/uia_listener/obj/ 
 src/create_json_schema/resources/
 *.env
+src/open_ai/__pycache__/
+venv/
