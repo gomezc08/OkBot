@@ -7,6 +7,7 @@ import json
 from typing import Dict, Any, Optional
 import openai
 from openai import OpenAI
+from dotenv import load_dotenv
 
 def run_request(
     prompt: str,
@@ -34,7 +35,8 @@ def run_request(
     """
     
     # Get API key from environment
-    api_key = os.getenv('OPENAI_API_KEY')
+    load_dotenv()
+    api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise ValueError("OPENAI_API_KEY environment variable is not set")
     
@@ -149,23 +151,3 @@ def extract_json_schema(response: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     
     print("Could not extract JSON schema from response")
     return None
-
-# Example usage
-if __name__ == "__main__":
-    # Test the function
-    test_prompt = "Generate a simple JSON schema for a user object with name and email fields."
-    
-    try:
-        response = run_request(test_prompt)
-        if response.get("success"):
-            print("Response received successfully!")
-            print(f"Content: {response['content'][:200]}...")
-            
-            # Try to extract JSON schema
-            schema = extract_json_schema(response)
-            if schema:
-                print(f"Extracted schema: {json.dumps(schema, indent=2)}")
-        else:
-            print(f"Error: {response.get('error')}")
-    except Exception as e:
-        print(f"Test failed: {e}")
