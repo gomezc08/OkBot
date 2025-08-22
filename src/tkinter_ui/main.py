@@ -21,6 +21,9 @@ class UIA_Recorder_UI:
         self.event_count = 0
         self.start_time = None
         
+        # Event storage for direct saving
+        self.captured_events = []
+        
         # File paths
         self.uia_project_path = Path(__file__).parent.parent / "uia_listener"
         self.output_path = Path(__file__).parent.parent / "create_json_schema" / "resources" / "uia_log.json"
@@ -143,39 +146,14 @@ class UIA_Recorder_UI:
                 messagebox.showerror("Error", f"UIA listener executable not found at: {exe_path}")
                 return
             
-            # Start the process with creation flags to allow signal handling
-            startupinfo = None
-            creation_flags = 0
-            
-            if hasattr(subprocess, 'STARTUPINFO'):
-                startupinfo = subprocess.STARTUPINFO()
-                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                startupinfo.wShowWindow = subprocess.SW_HIDE
-            
-            # On Windows, create a new process group to allow proper signal handling
-            if hasattr(subprocess, 'CREATE_NEW_PROCESS_GROUP'):
-                creation_flags = subprocess.CREATE_NEW_PROCESS_GROUP
-            
             # Start the process
             self.recording_process = subprocess.Popen(
                 [str(exe_path)],
                 cwd=self.uia_project_path,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True,
-                startupinfo=startupinfo,
-                creationflags=creation_flags
+                text=True
             )
-            
-            # Backup existing log file if it exists
-            if self.output_path.exists():
-                try:
-                    backup_path = self.output_path.parent / f"uia_log_backup_{int(time.time())}.json"
-                    import shutil
-                    shutil.copy2(self.output_path, backup_path)
-                    self.preview_text.insert(tk.END, f"Backed up existing log to: {backup_path.name}\n")
-                except Exception as e:
-                    self.preview_text.insert(tk.END, f"Warning: Could not backup existing log: {str(e)}\n")
             
             self.is_recording = True
             self.start_time = time.time()
@@ -208,10 +186,6 @@ class UIA_Recorder_UI:
                         # On Windows, try to send CTRL_C_EVENT
                         self.recording_process.send_signal(signal.CTRL_C_EVENT)
                         self.preview_text.insert(tk.END, "Sent Ctrl+C signal to UIA listener...\n")
-                        
-                        # Give the process time to handle the signal
-                        time.sleep(2)
-                        
                     except (AttributeError, OSError):
                         # Fallback to terminate
                         self.recording_process.terminate()
@@ -223,7 +197,7 @@ class UIA_Recorder_UI:
                 
                 # Wait for the process to finish gracefully
                 try:
-                    self.recording_process.wait(timeout=15)  # Give more time for graceful shutdown
+                    self.recording_process.wait(timeout=10)  # Give more time for graceful shutdown
                     self.preview_text.insert(tk.END, "UIA listener stopped gracefully.\n")
                 except subprocess.TimeoutExpired:
                     # If it doesn't respond to signals, force kill
@@ -256,72 +230,42 @@ class UIA_Recorder_UI:
         self.preview_text.insert(tk.END, f"Total recording time: {duration:.1f} seconds\n")
         self.preview_text.see(tk.END)
         
-        # Check if log file was created
-        self.preview_text.insert(tk.END, f"\nChecking for log file at: {self.output_path}\n")
+        # Save captured events directly to log file
+        self.preview_text.insert(tk.END, f"\nSaving captured events to log file...\n")
         
-        # Wait a moment for the file to be written
-        time.sleep(2)  # Give more time for file writing
-        
-        # Check if the output directory exists
-        output_dir = self.output_path.parent
-        if output_dir.exists():
-            self.preview_text.insert(tk.END, f"✅ Output directory exists: {output_dir}\n")
-        else:
-            self.preview_text.insert(tk.END, f"❌ Output directory does not exist: {output_dir}\n")
-        
-        if self.output_path.exists():
-            try:
-                with open(self.output_path, 'r') as f:
-                    data = json.load(f)
-                    actual_count = len(data) if isinstance(data, list) else 0
-                    self.preview_text.insert(tk.END, f"✅ Events saved to log file: {actual_count}\n")
-                    
-                    # Check if this is a new log file or if we should merge with existing data
-                    if actual_count > 0 and actual_count != self.event_count:
-                        self.preview_text.insert(tk.END, f"Note: UIA listener created new log file (overwrote previous data)\n")
-                        self.preview_text.insert(tk.END, f"Previous events may have been lost. Check backup files.\n")
-                    
-                    self.preview_text.see(tk.END)
-            except Exception as e:
-                self.preview_text.insert(tk.END, f"❌ Error reading log file: {str(e)}\n")
-                self.preview_text.see(tk.END)
-        else:
-            self.preview_text.insert(tk.END, f"❌ Log file not found at: {self.output_path}\n")
-            self.preview_text.insert(tk.END, "This usually means the UIA listener didn't save the file properly.\n")
+        try:
+            # Ensure the output directory exists
+            output_dir = self.output_path.parent
+            output_dir.mkdir(parents=True, exist_ok=True)
             
-            # Try to create a basic log file with the events we captured
-            try:
-                self.preview_text.insert(tk.END, "Attempting to create a basic log file...\n")
-                
-                # Ensure the output directory exists
-                output_dir = self.output_path.parent
-                output_dir.mkdir(parents=True, exist_ok=True)
-                
-                # Create a basic log structure with the events we captured
-                basic_log = []
-                for i in range(self.event_count):
-                    basic_log.append({
-                        "EventType": "Captured",
-                        "TimestampUtc": datetime.now().isoformat() + "Z",
-                        "ControlType": "ControlType.Unknown",
-                        "Name": f"Event_{i+1}",
-                        "ClassName": "Unknown",
-                        "ProcessId": -1,
-                        "Note": "Event captured by OkBot UI but UIA listener log not available"
-                    })
-                
-                # Write the basic log file
-                with open(self.output_path, 'w') as f:
-                    json.dump(basic_log, f, indent=2)
-                
-                self.preview_text.insert(tk.END, f"✅ Created basic log file with {len(basic_log)} events\n")
-                self.preview_text.insert(tk.END, "Note: This is a fallback log. For full UIA details, check UIA listener.\n")
-                
-            except Exception as e:
-                self.preview_text.insert(tk.END, f"❌ Failed to create fallback log: {str(e)}\n")
-                self.preview_text.insert(tk.END, "Try running the UIA listener manually to test.\n")
+            # Save the captured events directly
+            with open(self.output_path, 'w') as f:
+                json.dump(self.captured_events, f, indent=2)
             
-            self.preview_text.see(tk.END)
+            self.preview_text.insert(tk.END, f"✅ Successfully saved {len(self.captured_events)} events to log file\n")
+            self.preview_text.insert(tk.END, f"📁 Log file location: {self.output_path}\n")
+            
+            # Also check if UIA listener created its own log file
+            if self.output_path.exists():
+                try:
+                    with open(self.output_path, 'r') as f:
+                        data = json.load(f)
+                        actual_count = len(data) if isinstance(data, list) else 0
+                        self.preview_text.insert(tk.END, f"📊 Total events in log file: {actual_count}\n")
+                        
+                        if actual_count != len(self.captured_events):
+                            self.preview_text.insert(tk.END, f"ℹ️  Note: Event count mismatch (UI: {len(self.captured_events)}, File: {actual_count})\n")
+                            self.preview_text.insert(tk.END, f"   This may indicate the UIA listener also saved events\n")
+                        
+                        self.preview_text.see(tk.END)
+                except Exception as e:
+                    self.preview_text.insert(tk.END, f"⚠️  Warning: Could not read log file: {str(e)}\n")
+            
+        except Exception as e:
+            self.preview_text.insert(tk.END, f"❌ Error saving log file: {str(e)}\n")
+            self.preview_text.insert(tk.END, "Events were captured but could not be saved to file.\n")
+        
+        self.preview_text.see(tk.END)
         
         messagebox.showinfo("Recording Complete", 
                            f"Recording stopped!\n\nEvents captured: {self.event_count}\n"
@@ -334,7 +278,7 @@ class UIA_Recorder_UI:
             return
         
         try:
-            while self.recording_process and self.recording_process.poll() is None:
+            while self.recording_process.poll() is None:
                 # Read error output line by line
                 line = self.recording_process.stderr.readline()
                 if line:
@@ -355,7 +299,7 @@ class UIA_Recorder_UI:
             return
         
         try:
-            while self.recording_process and self.recording_process.poll() is None:
+            while self.recording_process.poll() is None:
                 # Read output line by line
                 line = self.recording_process.stdout.readline()
                 if line:
@@ -366,6 +310,9 @@ class UIA_Recorder_UI:
                             self.event_count += 1
                             # Update the event count label in the UI
                             self.root.after(0, self.update_event_count)
+                            
+                            # Parse and capture the event for direct saving
+                            self.root.after(0, self.capture_event, line)
                         
                         # Add to preview (limit lines to avoid memory issues)
                         self.root.after(0, self.add_to_preview, line)
@@ -379,6 +326,101 @@ class UIA_Recorder_UI:
     def update_event_count(self):
         """Update the event count label in the UI"""
         self.event_count_label.configure(text=str(self.event_count))
+    
+    def capture_event(self, line):
+        """Parse and capture UIA events from console output"""
+        try:
+            # Parse different event types
+            if '[Focus]' in line:
+                # Parse: [Focus] ControlType.Document  Name='Spotify - Liked Songs'  Class='System.__ComObject'  PID=12080
+                parts = line.split('  ')
+                if len(parts) >= 4:
+                    control_type = parts[0].replace('[Focus] ', '').strip()
+                    name = parts[1].replace("Name='", '').replace("'", '').strip()
+                    class_name = parts[2].replace("Class='", '').replace("'", '').strip()
+                    pid = parts[3].replace('PID=', '').strip()
+                    
+                    event = {
+                        "EventType": "Focus",
+                        "TimestampUtc": datetime.now().isoformat() + "Z",
+                        "ControlType": control_type,
+                        "Name": name,
+                        "ClassName": class_name,
+                        "ProcessId": int(pid) if pid.isdigit() else -1
+                    }
+                    self.captured_events.append(event)
+                    
+            elif '[Invoke]' in line:
+                # Parse: [Invoke] ControlType.Button  Name='Click me'  PID=1234
+                parts = line.split('  ')
+                if len(parts) >= 3:
+                    control_type = parts[0].replace('[Invoke] ', '').strip()
+                    name = parts[1].replace("Name='", '').replace("'", '').strip()
+                    pid = parts[2].replace('PID=', '').strip()
+                    
+                    event = {
+                        "EventType": "Invoke",
+                        "TimestampUtc": datetime.now().isoformat() + "Z",
+                        "ControlType": control_type,
+                        "Name": name,
+                        "ClassName": "Unknown",
+                        "ProcessId": int(pid) if pid.isdigit() else -1
+                    }
+                    self.captured_events.append(event)
+                    
+            elif '[Structure]' in line:
+                # Parse: [Structure] ChildAdded  On 'New Window'  PID=1234
+                parts = line.split('  ')
+                if len(parts) >= 3:
+                    change_type = parts[0].replace('[Structure] ', '').strip()
+                    name = parts[1].replace("On '", '').replace("'", '').strip()
+                    pid = parts[2].replace('PID=', '').strip()
+                    
+                    event = {
+                        "EventType": "StructureChanged",
+                        "TimestampUtc": datetime.now().isoformat() + "Z",
+                        "ControlType": "ControlType.Unknown",
+                        "Name": name,
+                        "ClassName": "Unknown",
+                        "ProcessId": int(pid) if pid.isdigit() else -1,
+                        "StructureChangeType": change_type
+                    }
+                    self.captured_events.append(event)
+                    
+            elif '[PropertyChanged]' in line:
+                # Parse: [PropertyChanged] AutomationElementIdentifiers.NameProperty -> New Value  (Name='Element Name' PID=1234)
+                if '->' in line and '(' in line:
+                    prop_part = line.split('->')[0].replace('[PropertyChanged] ', '').strip()
+                    value_part = line.split('->')[1].split('(')[0].strip()
+                    name_pid_part = line.split('(')[1].split(')')[0]
+                    
+                    name = name_pid_part.split("Name='")[1].split("'")[0] if "Name='" in name_pid_part else "Unknown"
+                    pid = name_pid_part.split('PID=')[1] if 'PID=' in name_pid_part else '-1'
+                    
+                    event = {
+                        "EventType": "PropertyChanged",
+                        "TimestampUtc": datetime.now().isoformat() + "Z",
+                        "ControlType": "ControlType.Unknown",
+                        "Name": name,
+                        "ClassName": "Unknown",
+                        "ProcessId": int(pid) if pid.isdigit() else -1,
+                        "PropertyName": prop_part,
+                        "NewValue": value_part
+                    }
+                    self.captured_events.append(event)
+                    
+        except Exception as e:
+            # If parsing fails, create a basic event entry
+            event = {
+                "EventType": "Parsed",
+                "TimestampUtc": datetime.now().isoformat() + "Z",
+                "ControlType": "ControlType.Unknown",
+                "Name": "Parse Error",
+                "ClassName": "Unknown",
+                "ProcessId": -1,
+                "Note": f"Failed to parse: {line[:100]}"
+            }
+            self.captured_events.append(event)
     
     def add_to_preview(self, line):
         """Add a line to the preview text area"""
