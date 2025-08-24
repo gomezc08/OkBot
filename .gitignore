@@ -4,3 +4,4 @@ src/create_json_schema/resources/
 *.env
 src/open_ai/__pycache__/
 venv/
+src/tkinter_ui/__pycache__/
