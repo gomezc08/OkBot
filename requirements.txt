@@ -7,6 +7,9 @@ openai>=1.0.0
 # Environment variable management
 python-dotenv>=1.0.0
 
+# MySQL Connector/Python
+mysql-connector-python>=9.0.0
+
 # Standard library packages (included with Python 3.7+)
 # - json
 # - os
