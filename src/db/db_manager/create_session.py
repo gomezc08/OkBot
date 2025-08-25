@@ -1,7 +1,7 @@
 from db_connector import DBConnector
 import mysql.connector
 
-class DBManager:
+class CreateSession:
     def __init__(self):
         self.connector = DBConnector()
     
