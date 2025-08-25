@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional
 import sys
 
 sys.path.append(str(Path(__file__).parent.parent))
-from OpenAI.openai_client import run_request
+from open_ai.openai_client import run_request
 
 JSON_SCHEMA_PROMPT = """
 You are a senior QA automation engineer. From raw UIA listener events and examples,

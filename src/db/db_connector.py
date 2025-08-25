@@ -12,7 +12,6 @@ class DBConnector:
         self.cnx = None
         self.cursor = None
 
-
     def open_connection(self):
         print("<<Opening>> connection to MySQL")
         load_dotenv()
