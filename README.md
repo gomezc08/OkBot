@@ -10,24 +10,6 @@ A comprehensive UI Automation (UIA) bot framework that combines C# UIA listeners
 - **Cross-Platform Support**: Works on Windows with .NET Framework
 - **Extensible Architecture**: Modular design for easy customization and extension
 
-## 🏗️ Project Structure
-
-```
-OkBot/
-├── src/
-│   ├── create_json_schema/          # JSON Schema generation tools
-│   │   ├── generate_json_schema.py  # Main schema generation script
-│   │   └── resources/               # Input data and generated schemas
-│   ├── open_ai/                     # OpenAI API integration
-│   │   └── openai_client.py         # OpenAI client wrapper
-│   └── uia_listener/                # C# UIA event listener
-│       ├── program.cs                # Main listener application
-│       └── okbot_uia_listener.csproj # C# project file
-├── requirements.txt                  # Python dependencies
-├── .gitignore                       # Git ignore rules
-└── README.md                        # This file
-```
-
 ## 🛠️ Prerequisites
 
 - **Python 3.7+** with pip
