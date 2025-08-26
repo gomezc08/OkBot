@@ -11,6 +11,7 @@ from typing import Dict, Any, Optional, Union
 from pathlib import Path
 import logging
 import pyautogui
+import pygetwindow as gw
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -39,6 +40,7 @@ class AutomationEngine:
         try:
             app_path = kwargs.get('app_path')
             
+            # Handle URL.
             if target.startswith(('http://', 'https://')):
                 # Handle URL opening
                 if app_path and Path(app_path).exists():
@@ -51,6 +53,7 @@ class AutomationEngine:
                     webbrowser.open(target)
                     logger.info(f"Opened URL in default browser: {target}")
                     return True
+            # Handle desktop application.
             else:
                 # Handle process launching
                 if app_path:
@@ -127,7 +130,6 @@ class AutomationEngine:
                     logger.info(f"Focusing application: {focus_app}")
                     try:
                         # Try to focus the application by its window title
-                        import pygetwindow as gw
                         windows = gw.getWindowsWithTitle(focus_app)
                         if windows:
                             target_window = windows[0]
@@ -186,7 +188,6 @@ class AutomationEngine:
             if focus_app:
                 logger.info(f"Focusing application: {focus_app}")
                 try:
-                    import pygetwindow as gw
                     windows = gw.getWindowsWithTitle(focus_app)
                     if windows:
                         target_window = windows[0]
