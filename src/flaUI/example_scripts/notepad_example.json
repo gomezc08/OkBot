@@ -1,0 +1,44 @@
+{
+  "description": "Open Notepad and create a simple document",
+  "actions": [
+    {
+      "type": "start_process",
+      "target": "notepad",
+      "app_path": "notepad.exe",
+      "description": "Launch Notepad application"
+    },
+    {
+      "type": "wait",
+      "duration": 2,
+      "description": "Wait for Notepad to fully load"
+    },
+    {
+      "type": "set_variable",
+      "name": "greeting",
+      "value": "Hello from OkBot!",
+      "description": "Set the greeting message"
+    },
+    {
+      "type": "type_text",
+      "text": "${greeting}",
+      "delay": 0.05,
+      "description": "Type the greeting message with variable substitution"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Pause to show the result"
+    },
+    {
+      "type": "type_text",
+      "text": "\n\nThis is a test document created by the OkBot automation engine.",
+      "delay": 0.03,
+      "description": "Type additional text"
+    },
+    {
+      "type": "wait",
+      "duration": 2,
+      "description": "Final pause to show the complete document"
+    }
+  ]
+}
