@@ -22,6 +22,7 @@
       "type": "type_text",
       "text": "${greeting}",
       "delay": 0.05,
+      "focus_app": "Untitled - Notepad",
       "description": "Type the greeting message with variable substitution"
     },
     {
@@ -33,6 +34,7 @@
       "type": "type_text",
       "text": "\n\nThis is a test document created by the OkBot automation engine.",
       "delay": 0.03,
+      "focus_app": "Untitled - Notepad",
       "description": "Type additional text"
     },
     {

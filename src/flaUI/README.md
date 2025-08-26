@@ -109,15 +109,21 @@ Launches applications or opens URLs.
 - `app_path` - Full path to the application executable (optional)
 
 ### type_text
-Types text with optional delays and variable substitution.
+Types text with optional delays, variable substitution, and app focusing.
 
 ```json
 {
   "type": "type_text",
   "text": "Hello ${name}!",
-  "delay": 0.05
+  "delay": 0.05,
+  "focus_app": "Notepad"
 }
 ```
+
+**Parameters:**
+- `text` - Text to type (supports `${variable}` syntax)
+- `delay` - Delay between characters (optional)
+- `focus_app` - Application window title to focus before typing (optional)
 
 ### wait
 Simple delay or wait for human input.

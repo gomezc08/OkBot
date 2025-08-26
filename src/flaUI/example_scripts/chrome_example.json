@@ -22,6 +22,7 @@
       "type": "type_text",
       "text": "${search_term}",
       "delay": 0.05,
+      "focus_app": "Google",
       "description": "Type the search term in Google search box"
     },
     {

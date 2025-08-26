@@ -99,7 +99,7 @@ class AutomationEngine:
         
         Args:
             text: Text to type (can be variable reference like ${var_name})
-            **kwargs: Additional options like 'delay' between characters
+            **kwargs: Additional options like 'delay' between characters, 'focus_app' for app name
             
         Returns:
             bool: True if successful, False otherwise
@@ -116,10 +116,32 @@ class AutomationEngine:
                     return False
             
             delay = kwargs.get('delay', 0.01)  # Default 10ms delay between characters
+            focus_app = kwargs.get('focus_app')  # Optional app name to focus
             
             try:
                 # Set a small delay to prevent issues
                 pyautogui.PAUSE = 0.01
+                
+                # Focus the target application if specified
+                if focus_app:
+                    logger.info(f"Focusing application: {focus_app}")
+                    try:
+                        # Try to focus the application by its window title
+                        import pygetwindow as gw
+                        windows = gw.getWindowsWithTitle(focus_app)
+                        if windows:
+                            target_window = windows[0]
+                            target_window.activate()
+                            target_window.maximize()
+                            logger.info(f"Focused window: {target_window.title}")
+                            # Wait a bit for the window to be ready
+                            time.sleep(1)
+                        else:
+                            logger.warning(f"Could not find window with title: {focus_app}")
+                    except ImportError:
+                        logger.warning("pygetwindow not available, cannot focus application")
+                    except Exception as e:
+                        logger.warning(f"Could not focus application {focus_app}: {e}")
                 
                 logger.info(f"Typing text: '{text}' (delay: {delay}s)")
                 
@@ -349,7 +371,7 @@ def main():
         ]
     }
 
-    script_path = Path(__file__).parent / "example_scripts" / "notepad_example.json"
+    script_path = Path(__file__).parent / "example_scripts" / "chrome_example.json"
     with open(script_path, "r") as f:
         example_script = json.load(f)
     

@@ -81,6 +81,7 @@ Types text into the active application.
   "type": "type_text",
   "text": "Hello, World!",
   "delay": 0.05,
+  "focus_app": "Notepad",
   "description": "Type greeting message"
 }
 ```
@@ -88,6 +89,7 @@ Types text into the active application.
 **Parameters:**
 - `text` (required): Text to type (supports variable substitution with `${var_name}`)
 - `delay` (optional): Delay between characters in seconds (default: 0.01)
+- `focus_app` (optional): Application window title to focus before typing
 - `description` (optional): Human-readable description
 
 **Variable Substitution:**
@@ -214,6 +216,7 @@ Add a delay after any action completes:
       "type": "type_text",
       "text": "${message}",
       "delay": 0.05,
+      "focus_app": "Untitled - Notepad",
       "description": "Type the message with variable substitution"
     },
     {
