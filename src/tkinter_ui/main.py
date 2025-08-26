@@ -5,6 +5,7 @@ import threading
 import time
 import json
 import os
+import signal
 from pathlib import Path
 from datetime import datetime
 
@@ -24,7 +25,7 @@ class UIA_Recorder_UI:
         # Event storage for direct saving
         self.captured_events = []
         
-        # File paths
+        # File paths - use the same path that the C# program uses
         self.uia_project_path = Path(__file__).parent.parent / "uia_listener"
         self.output_path = Path(__file__).parent.parent / "create_json_schema" / "resources" / "uia_log.json"
         
@@ -146,18 +147,20 @@ class UIA_Recorder_UI:
                 messagebox.showerror("Error", f"UIA listener executable not found at: {exe_path}")
                 return
             
-            # Start the process
+            # Start the process with proper Windows signal handling
             self.recording_process = subprocess.Popen(
                 [str(exe_path)],
                 cwd=self.uia_project_path,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True
+                text=True,
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0
             )
             
             self.is_recording = True
             self.start_time = time.time()
             self.event_count = 0
+            self.captured_events = []  # Reset captured events
             
             # Update UI
             self.record_button.configure(text="Stop Recording", style='Danger.TButton')
@@ -179,25 +182,27 @@ class UIA_Recorder_UI:
     def stop_recording(self):
         if self.recording_process:
             try:
-                # Try to send Ctrl+Break signal first (this allows the UIA listener to save the log)
-                if hasattr(self.recording_process, 'send_signal'):
-                    import signal
+                self.preview_text.insert(tk.END, f"\n[{datetime.now().strftime('%H:%M:%S')}] Stopping recording...\n")
+                
+                # On Windows, send Ctrl+C (SIGINT) which the C# program handles gracefully
+                if os.name == 'nt':
                     try:
-                        # On Windows, try to send CTRL_BREAK_EVENT (more reliable than CTRL_C_EVENT)
-                        self.recording_process.send_signal(signal.CTRL_BREAK_EVENT)
-                        self.preview_text.insert(tk.END, "Sent Ctrl+Break signal to UIA listener...\n")
-                    except (AttributeError, OSError):
+                        # Send Ctrl+C to the process group
+                        self.recording_process.send_signal(signal.CTRL_C_EVENT)
+                        self.preview_text.insert(tk.END, "Sent Ctrl+C signal to UIA listener...\n")
+                    except (AttributeError, OSError) as e:
+                        self.preview_text.insert(tk.END, f"Could not send Ctrl+C: {e}\n")
                         # Fallback to terminate
                         self.recording_process.terminate()
                         self.preview_text.insert(tk.END, "Sent terminate signal to UIA listener...\n")
                 else:
-                    # Fallback for systems without send_signal
+                    # On non-Windows, send SIGTERM
                     self.recording_process.terminate()
                     self.preview_text.insert(tk.END, "Sent terminate signal to UIA listener...\n")
                 
                 # Wait for the process to finish gracefully
                 try:
-                    self.recording_process.wait(timeout=10)  # Give more time for graceful shutdown
+                    self.recording_process.wait(timeout=15)  # Give more time for graceful shutdown
                     self.preview_text.insert(tk.END, "UIA listener stopped gracefully.\n")
                 except subprocess.TimeoutExpired:
                     # If it doesn't respond to signals, force kill
@@ -230,40 +235,50 @@ class UIA_Recorder_UI:
         self.preview_text.insert(tk.END, f"Total recording time: {duration:.1f} seconds\n")
         self.preview_text.see(tk.END)
         
-        # Save captured events directly to log file
-        self.preview_text.insert(tk.END, f"\nSaving captured events to log file...\n")
+        # Wait a moment for the C# program to finish writing its log file
+        self.preview_text.insert(tk.END, f"\nWaiting for UIA listener to finish writing log file...\n")
+        time.sleep(2)  # Give the C# program time to finish writing
         
-        try:
-            # Ensure the output directory exists
-            output_dir = self.output_path.parent
-            output_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Save the captured events directly
-            with open(self.output_path, 'w') as f:
-                json.dump(self.captured_events, f, indent=2)
-            
-            self.preview_text.insert(tk.END, f"✅ Successfully saved {len(self.captured_events)} events to log file\n")
-            self.preview_text.insert(tk.END, f"📁 Log file location: {self.output_path}\n")
-            
-            # Also check if UIA listener created its own log file
-            if self.output_path.exists():
-                try:
-                    with open(self.output_path, 'r') as f:
-                        data = json.load(f)
-                        actual_count = len(data) if isinstance(data, list) else 0
-                        self.preview_text.insert(tk.END, f"📊 Total events in log file: {actual_count}\n")
+        # Check if the log file was created by the C# program
+        if self.output_path.exists():
+            try:
+                with open(self.output_path, 'r') as f:
+                    data = json.load(f)
+                    actual_count = len(data) if isinstance(data, list) else 0
+                    self.preview_text.insert(tk.END, f"✅ UIA listener saved {actual_count} events to log file\n")
+                    
+                    # If we have more events than the C# program, merge them
+                    if len(self.captured_events) > 0:
+                        # Merge events, avoiding duplicates
+                        existing_events = set()
+                        for event in data:
+                            # Create a unique key for each event
+                            key = f"{event.get('EventType', '')}_{event.get('Name', '')}_{event.get('TimestampUtc', '')}"
+                            existing_events.add(key)
                         
-                        if actual_count != len(self.captured_events):
-                            self.preview_text.insert(tk.END, f"ℹ️  Note: Event count mismatch (UI: {len(self.captured_events)}, File: {actual_count})\n")
-                            self.preview_text.insert(tk.END, f"   This may indicate the UIA listener also saved events\n")
+                        # Add our captured events that aren't duplicates
+                        merged_events = data.copy()
+                        for event in self.captured_events:
+                            key = f"{event.get('EventType', '')}_{event.get('Name', '')}_{event.get('TimestampUtc', '')}"
+                            if key not in existing_events:
+                                merged_events.append(event)
                         
-                        self.preview_text.see(tk.END)
-                except Exception as e:
-                    self.preview_text.insert(tk.END, f"⚠️  Warning: Could not read log file: {str(e)}\n")
-            
-        except Exception as e:
-            self.preview_text.insert(tk.END, f"❌ Error saving log file: {str(e)}\n")
-            self.preview_text.insert(tk.END, "Events were captured but could not be saved to file.\n")
+                        # Save the merged result
+                        with open(self.output_path, 'w') as f:
+                            json.dump(merged_events, f, indent=2)
+                        
+                        self.preview_text.insert(tk.END, f"✅ Merged and saved {len(merged_events)} total events\n")
+                    
+                    self.preview_text.insert(tk.END, f"📁 Log file location: {self.output_path}\n")
+                    
+            except Exception as e:
+                self.preview_text.insert(tk.END, f"⚠️  Warning: Could not read log file: {str(e)}\n")
+                # Fall back to saving our captured events
+                self.save_captured_events()
+        else:
+            self.preview_text.insert(tk.END, f"❌ UIA listener did not create log file\n")
+            # Save our captured events as fallback
+            self.save_captured_events()
         
         self.preview_text.see(tk.END)
         
@@ -271,6 +286,24 @@ class UIA_Recorder_UI:
                            f"Recording stopped!\n\nEvents captured: {self.event_count}\n"
                            f"Duration: {duration:.1f} seconds\n\n"
                            f"Log file status: {'✅ Found' if self.output_path.exists() else '❌ Not found'}")
+    
+    def save_captured_events(self):
+        """Save captured events to the log file"""
+        try:
+            # Ensure the output directory exists
+            output_dir = self.output_path.parent
+            output_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Save the captured events
+            with open(self.output_path, 'w') as f:
+                json.dump(self.captured_events, f, indent=2)
+            
+            self.preview_text.insert(tk.END, f"✅ Successfully saved {len(self.captured_events)} events to log file\n")
+            self.preview_text.insert(tk.END, f"📁 Log file location: {self.output_path}\n")
+            
+        except Exception as e:
+            self.preview_text.insert(tk.END, f"❌ Error saving log file: {str(e)}\n")
+            self.preview_text.insert(tk.END, "Events were captured but could not be saved to file.\n")
     
     def monitor_errors(self):
         """Monitor the UIA process stderr for any error messages"""
