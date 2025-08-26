@@ -14,6 +14,13 @@ JSON_SCHEMA_PROMPT = """
 You are a senior QA automation engineer. From raw UIA listener events and examples,
 produce a STRICT JSON Schema (Draft 2020-12) that validates an ARRAY of UIA events.
 
+From (1) raw UIA listener events and (2) examples, you will:
+  A) Produce a STRICT JSON Schema (Draft 2020-12) that validates an ARRAY of UIA events ("event_schema").
+  B) Produce a STRICT JSON Schema (Draft 2020-12) that validates an ACTION PLAN ("action_schema") using the provided action formats.
+  C) Generate a minimal ACTION PLAN ("actions") that maps the given raw events to concrete actions (1:1 or many:1 where sensible), referencing targets defined under "targets".
+
+Your output MUST be deterministic, strictly valid JSON, and compile under Draft 2020-12.
+
 ## Inputs
 <bot_listener_data>
 {bot_listener_data}
@@ -23,20 +30,22 @@ produce a STRICT JSON Schema (Draft 2020-12) that validates an ARRAY of UIA even
 {listener_data_examples}
 </listener_data_examples>
 
-<format_templates>
-{format_templates}
-</format_templates>
+<actions_formats>
+{actions_formats}
+</actions_formats>
 
 ## Objectives
-- Infer a robust schema for UIA events that compiles under Draft 2020-12.
-- Support common fields across all events and event-specific fields via conditional validation.
-- Prefer strong typing where safe; keep flexible where inputs vary.
+- Infer a robust "event_schema" for UIA events that appear in the input and examples.
+- Infer a robust "action_schema" aligned to the action formats provided.
+- Normalize noisy UIA bursts (e.g., repeated Focus/PropertyChanged) into stable, minimal actions.
+- Prefer stable selectors (controlType, className, name) and allow multiple selector variants per target.
+- Capture timeouts/retries where relevant; use conditionals (if_exists) for optional UI surfaces.
 
 ## Requirements
 The following requirements MUST be reflected in the generated schema:
 
 <schema_requirements>
-{schema_requirements}
+...
 </schema_requirements>
 
 ## Deliverable
@@ -51,8 +60,8 @@ class UIA_Listener_Data:
         self.temperature = 0.1
         self.data = self.load_json(script_dir / "resources/uia_log.json")
         self.examples = self.load_json(script_dir / "resources/listener_data_examples.json")
-        self.templates = self.load_text(script_dir / "resources/format_templates.md")
-        self.schema_requirements = self.load_text(script_dir / "resources/schema_requirements.md")
+        self.actions_formats = self.load_text(script_dir / "resources/format_templates.md")
+        # self.schema_requirements = self.load_text(script_dir / "resources/schema_requirements.md")
 
     @staticmethod
     def load_json(file_path: str) -> Dict[str, Any]:
@@ -88,8 +97,8 @@ class UIA_Listener_Data:
             prompt = JSON_SCHEMA_PROMPT.format (
             bot_listener_data=json.dumps(self.data, indent=2),
             listener_data_examples=json.dumps(self.examples, indent=2),
-            format_templates=self.templates,
-            schema_requirements=self._escape_braces(self.schema_requirements),
+            actions_formats=self.actions_formats,
+            # schema_requirements=self._escape_braces(self.schema_requirements),
             )
 
             # Optional: avoid dumping giant prompt bodies to stdout
