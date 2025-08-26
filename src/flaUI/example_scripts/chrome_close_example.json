@@ -1,5 +1,5 @@
 {
-  "description": "Open Chrome and navigate to Google",
+  "description": "Chrome automation with robust close button detection",
   "actions": [
     {
       "type": "start_process",
@@ -32,11 +32,31 @@
     },
     {
       "type": "click",
-      "target": "Close button",
+      "target": "Close button (strategy 1)",
       "button": "left",
       "focus_app": "Google",
-      "keyboard_shortcut": "alt+f4",
-      "description": "Close Chrome using Alt+F4 keyboard shortcut"
+      "element_selector": {
+        "control_type": "Button",
+        "name": "Close",
+        "process_name": "chrome.exe"
+      },
+      "description": "Try to find close button by name and process"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Wait to see if Chrome closed"
+    },
+    {
+      "type": "click",
+      "target": "Close button (strategy 2)",
+      "button": "left",
+      "focus_app": "Google",
+      "element_selector": {
+        "control_type": "Button",
+        "process_name": "chrome.exe"
+      },
+      "description": "Try to find any button in Chrome and click it (fallback)"
     }
   ]
 }

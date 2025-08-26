@@ -110,21 +110,43 @@ Types text into the active application.
 ```
 
 ### 4. click
-Clicks on a UI element (currently a placeholder for future implementation).
+Clicks on a UI element using UIA element detection or coordinates.
 
 ```json
 {
   "type": "click",
   "target": "Save button",
   "button": "left",
-  "description": "Click the save button"
+  "focus_app": "Notepad",
+  "element_selector": {
+    "control_type": "Button",
+    "name": "Save",
+    "class_name": "Button"
+  },
+  "description": "Click the save button using UIA detection"
 }
 ```
 
 **Parameters:**
 - `target` (required): Description of element to click
 - `button` (optional): Mouse button to use - `"left"`, `"right"`, `"middle"` (default: `"left"`)
+- `focus_app` (optional): Application window title to focus before clicking
+- `keyboard_shortcut` (optional): Keyboard shortcut to execute (e.g., `"alt+f4"`, `"ctrl+s"`)
+- `element_selector` (optional): UIA element selector for intelligent element detection
+- `coordinates` (optional): [x, y] coordinates to click at (fallback if UIA detection fails)
 - `description` (optional): Human-readable description
+
+**Element Selector Properties:**
+- `control_type`: UI element type (e.g., "Button", "Edit", "Window", "Pane")
+- `name`: Element name or text content
+- `class_name`: Element's class name
+- `process_name`: Target application process name
+
+**Usage Priority:**
+1. **Keyboard Shortcut** (most reliable for window actions): Uses `keyboard_shortcut` for standard actions
+2. **UIA Element Detection** (recommended for UI elements): Uses `element_selector` for intelligent element finding
+3. **Coordinates Fallback**: Falls back to `coordinates` if UIA detection fails
+4. **Simulation**: Logs action if neither method is available
 
 ### 5. set_variable
 Sets a variable for use in subsequent actions.

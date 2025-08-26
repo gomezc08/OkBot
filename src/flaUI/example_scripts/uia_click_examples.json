@@ -1,0 +1,69 @@
+{
+  "description": "Examples of UIA-based element clicking strategies",
+  "actions": [
+    {
+      "type": "start_process",
+      "target": "notepad",
+      "app_path": "notepad.exe",
+      "description": "Open Notepad to demonstrate UIA clicking"
+    },
+    {
+      "type": "wait",
+      "duration": 2,
+      "description": "Wait for Notepad to load"
+    },
+    {
+      "type": "type_text",
+      "text": "Testing UIA element detection...",
+      "delay": 0.05,
+      "focus_app": "Untitled - Notepad",
+      "description": "Type test text"
+    },
+    {
+      "type": "click",
+      "target": "File menu",
+      "button": "left",
+      "focus_app": "Untitled - Notepad",
+      "element_selector": {
+        "control_type": "MenuItem",
+        "name": "File",
+        "class_name": "Menu"
+      },
+      "description": "Click File menu using UIA detection"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Wait for menu to appear"
+    },
+    {
+      "type": "click",
+      "target": "Close button",
+      "button": "left",
+      "focus_app": "Untitled - Notepad",
+      "element_selector": {
+        "control_type": "Button",
+        "name": "Close",
+        "class_name": "Button"
+      },
+      "description": "Click Close button using UIA detection"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Wait for close dialog"
+    },
+    {
+      "type": "click",
+      "target": "Don't Save button",
+      "button": "left",
+      "focus_app": "Notepad",
+      "element_selector": {
+        "control_type": "Button",
+        "name": "Don't Save",
+        "class_name": "Button"
+      },
+      "description": "Click Don't Save using UIA detection"
+    }
+  ]
+}

@@ -155,15 +155,34 @@ Sets variables for use in scripts.
 ```
 
 ### click
-Clicks on UI elements (placeholder for future implementation).
+Clicks on UI elements using UIA element detection or coordinates.
 
 ```json
 {
   "type": "click",
   "target": "Save button",
-  "button": "left"
+  "button": "left",
+  "focus_app": "Notepad",
+  "element_selector": {
+    "control_type": "Button",
+    "name": "Save",
+    "class_name": "Button"
+  }
 }
 ```
+
+**Parameters:**
+- `target` - Description of element to click
+- `button` - Mouse button (left/right/middle)
+- `focus_app` - Application to focus before clicking (optional)
+- `element_selector` - UIA element selector for intelligent detection (recommended)
+- `coordinates` - [x, y] pixel coordinates as fallback (optional)
+
+**Element Selector Properties:**
+- `control_type` - UI element type (Button, Edit, Window, etc.)
+- `name` - Element name or text content
+- `class_name` - Element's class name
+- `process_name` - Target application process name
 
 ## Variable System
 

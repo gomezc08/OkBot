@@ -1,5 +1,5 @@
 {
-  "description": "Open Chrome and navigate to Google",
+  "description": "Complete Chrome workflow: Open, search, and close",
   "actions": [
     {
       "type": "start_process",
@@ -37,6 +37,11 @@
       "focus_app": "Google",
       "keyboard_shortcut": "alt+f4",
       "description": "Close Chrome using Alt+F4 keyboard shortcut"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Wait for Chrome to close"
     }
   ]
 }

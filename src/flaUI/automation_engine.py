@@ -167,23 +167,291 @@ class AutomationEngine:
         
         Args:
             target: Description of element to click
-            **kwargs: Additional options like 'button' (left/right/middle)
+            **kwargs: Additional options like 'button' (left/right/middle), 'coordinates' for x,y position,
+                     'element_selector' for UIA-based element detection, 'keyboard_shortcut' for keyboard actions
             
         Returns:
             bool: True if successful, False otherwise
         """
         try:
             button = kwargs.get('button', 'left')
+            coordinates = kwargs.get('coordinates')  # Optional x,y coordinates
+            focus_app = kwargs.get('focus_app')  # Optional app to focus before clicking
+            element_selector = kwargs.get('element_selector')  # UIA element selector
+            keyboard_shortcut = kwargs.get('keyboard_shortcut')  # Keyboard shortcut (e.g., 'alt+f4')
+            
             logger.info(f"Clicking {target} with {button} button")
             
-            # For now, just log the action
-            # In a real implementation, this would locate and click the element
-            time.sleep(0.5)  # Simulate click delay
+            # Focus the target application if specified
+            if focus_app:
+                logger.info(f"Focusing application: {focus_app}")
+                try:
+                    import pygetwindow as gw
+                    windows = gw.getWindowsWithTitle(focus_app)
+                    if windows:
+                        target_window = windows[0]
+                        target_window.activate()
+                        logger.info(f"Focused window: {target_window.title}")
+                        time.sleep(0.5)  # Wait for window to be ready
+                    else:
+                        logger.warning(f"Could not find window with title: {focus_app}")
+                except Exception as e:
+                    logger.warning(f"Could not focus application {focus_app}: {e}")
+            
+            # Try keyboard shortcut first (most reliable for window actions)
+            if keyboard_shortcut:
+                logger.info(f"Using keyboard shortcut: {keyboard_shortcut}")
+                try:
+                    pyautogui.hotkey(*keyboard_shortcut.split('+'))
+                    logger.info(f"Executed keyboard shortcut: {keyboard_shortcut}")
+                    return True
+                except Exception as e:
+                    logger.warning(f"Keyboard shortcut failed: {e}")
+            
+            # Try UIA-based element detection
+            if element_selector:
+                success = self._click_by_uia(element_selector, button)
+                if success:
+                    return True
+                else:
+                    logger.warning("UIA element detection failed, falling back to coordinates")
+            
+            # Perform the actual click
+            if coordinates:
+                x, y = coordinates
+                logger.info(f"Clicking at coordinates: ({x}, {y})")
+                pyautogui.click(x, y, button=button)
+            else:
+                # For now, just log the action (future: implement element detection)
+                logger.info(f"Clicking {target} (coordinates not specified)")
+                time.sleep(0.5)  # Simulate click delay
             
             return True
             
         except Exception as e:
             logger.error(f"Failed to click '{target}': {e}")
+            return False
+    
+    def _click_by_uia(self, element_selector: dict, button: str = 'left') -> bool:
+        """
+        Click on a UI element using UIA element detection.
+        
+        Args:
+            element_selector: Dictionary with UIA properties to identify the element
+            button: Mouse button to use
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            control_type = element_selector.get('control_type', 'Any')
+            name = element_selector.get('name', '')
+            class_name = element_selector.get('class_name', '')
+            process_name = element_selector.get('process_name', '')
+            
+            logger.info(f"UIA: Looking for element - Type: {control_type}, Name: '{name}', Class: '{class_name}', Process: '{process_name}'")
+            
+            # Try to use pywinauto for UIA element detection
+            try:
+                from pywinauto import Desktop, Application
+                from pywinauto.findwindows import find_window
+                from pywinauto.controls.uiawrapper import UIAWrapper
+                
+                # Find the target window first
+                target_window = None
+                if process_name:
+                    # Try to find by process name
+                    try:
+                        # First try to connect by process name
+                        app = Application(backend="uia").connect(process=process_name)
+                        target_window = app.top_window()
+                        logger.info(f"Found window by process: {target_window.window_text()}")
+                    except Exception as e:
+                        logger.info(f"Could not find window by process name '{process_name}': {e}")
+                        
+                        # Try to find by executable name
+                        try:
+                            import psutil
+                            for proc in psutil.process_iter(['pid', 'name']):
+                                if proc.info['name'].lower() == process_name.lower():
+                                    try:
+                                        app = Application(backend="uia").connect(pid=proc.info['pid'])
+                                        target_window = app.top_window()
+                                        logger.info(f"Found window by PID {proc.info['pid']}: {target_window.window_text()}")
+                                        break
+                                    except Exception as pid_e:
+                                        logger.info(f"Could not connect to PID {proc.info['pid']}: {pid_e}")
+                                        continue
+                        except ImportError:
+                            logger.info("psutil not available for process enumeration")
+                        except Exception as e:
+                            logger.info(f"Process enumeration failed: {e}")
+                
+                if not target_window and class_name:
+                    # Try to find by class name
+                    try:
+                        target_window = find_window(class_name=class_name)
+                        target_window = UIAWrapper(target_window)
+                        logger.info(f"Found window by class: {target_window.window_text()}")
+                    except Exception as e:
+                        logger.info(f"Could not find window by class {class_name}: {e}")
+                
+                if not target_window:
+                    # Try to find any window that might contain our element
+                    try:
+                        windows = Desktop(backend="uia").windows()
+                        for window in windows:
+                            try:
+                                window_text = window.window_text()
+                                if window_text and window_text != "" and "chrome" in window_text.lower():
+                                    target_window = window
+                                    logger.info(f"Found Chrome window: {window_text}")
+                                    break
+                            except:
+                                continue
+                    except Exception as e:
+                        logger.info(f"Could not enumerate windows: {e}")
+                
+                if not target_window:
+                    # Last resort: try to find any visible window
+                    try:
+                        windows = Desktop(backend="uia").windows()
+                        for window in windows:
+                            try:
+                                window_text = window.window_text()
+                                if window_text and window_text != "" and len(window_text) > 3:
+                                    target_window = window
+                                    logger.info(f"Using fallback window: {window_text}")
+                                    break
+                            except:
+                                continue
+                    except Exception as e:
+                        logger.info(f"Could not enumerate windows: {e}")
+                
+                if target_window:
+                    # Look for the specific element within the window
+                    element = None
+                    
+                    # Try to find by name first (most reliable)
+                    if name:
+                        try:
+                            # Try different methods to find elements by name
+                            try:
+                                element = target_window.child_window(name=name, control_type=control_type)
+                                logger.info(f"Found element by name: {name}")
+                            except:
+                                # Fallback: search all children for name match
+                                all_children = target_window.children()
+                                for child in all_children:
+                                    try:
+                                        if hasattr(child, 'window_text'):
+                                            child_text = child.window_text()
+                                            if child_text and name.lower() in child_text.lower():
+                                                element = child
+                                                logger.info(f"Found element by name in children: {child_text}")
+                                                break
+                                    except:
+                                        continue
+                        except Exception as e:
+                            logger.info(f"Element not found by name '{name}': {e}")
+                    
+                    # Try to find by control type if name didn't work
+                    if not element and control_type != 'Any':
+                        try:
+                            # Try different approaches to find elements
+                            try:
+                                elements = target_window.children(control_type=control_type)
+                            except:
+                                # Fallback: try to get all children and filter by type
+                                try:
+                                    all_children = target_window.children()
+                                    elements = []
+                                    for child in all_children:
+                                        try:
+                                            if hasattr(child, 'control_type'):
+                                                child_type = str(child.control_type())
+                                                if control_type.lower() in child_type.lower():
+                                                    elements.append(child)
+                                        except:
+                                            continue
+                                except:
+                                    elements = []
+                            
+                            if elements:
+                                # If we have a name, try to find the best match
+                                if name:
+                                    for elem in elements:
+                                        try:
+                                            elem_text = elem.window_text()
+                                            if elem_text and name.lower() in elem_text.lower():
+                                                element = elem
+                                                logger.info(f"Found element by type and partial name match: {elem_text}")
+                                                break
+                                        except:
+                                            continue
+                                
+                                # If still no match, use the first element of this type
+                                if not element:
+                                    element = elements[0]
+                                    try:
+                                        logger.info(f"Using first element of type {control_type}: {element.window_text()}")
+                                    except:
+                                        logger.info(f"Using first element of type {control_type}")
+                        except Exception as e:
+                            logger.info(f"Could not find elements by control type {control_type}: {e}")
+                    
+                    # Last resort: try to find any element with the name
+                    if not element and name:
+                        try:
+                            # Search more broadly for elements with the name
+                            all_children = target_window.children()
+                            for child in all_children:
+                                try:
+                                    if hasattr(child, 'window_text'):
+                                        child_text = child.window_text()
+                                        if child_text and name.lower() in child_text.lower():
+                                            element = child
+                                            logger.info(f"Found element by name in any type: {child_text}")
+                                            break
+                                except:
+                                    continue
+                        except Exception as e:
+                            logger.info(f"Could not search all children: {e}")
+                    
+                    if element:
+                        # Get the element's bounding rectangle and click at its center
+                        try:
+                            rect = element.rectangle()
+                            center_x = (rect.left + rect.right) // 2
+                            center_y = (rect.top + rect.bottom) // 2
+                            
+                            logger.info(f"Clicking at element center: ({center_x}, {center_y})")
+                            pyautogui.click(center_x, center_y, button=button)
+                            return True
+                            
+                        except Exception as e:
+                            logger.warning(f"Could not get element rectangle: {e}")
+                            # Fallback: try to click the element directly
+                            try:
+                                element.click_input(button=button)
+                                logger.info("Clicked element using UIA click_input")
+                                return True
+                            except Exception as click_e:
+                                logger.warning(f"Could not click element directly: {click_e}")
+                    else:
+                        logger.warning("Could not find target element")
+                else:
+                    logger.warning("Could not find target window")
+                
+            except ImportError:
+                logger.warning("pywinauto not available for UIA element detection")
+            except Exception as e:
+                logger.warning(f"UIA element detection failed: {e}")
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"UIA element detection failed: {e}")
             return False
     
     def set_variable(self, name: str, value: Any) -> None:
