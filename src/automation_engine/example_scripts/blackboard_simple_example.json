@@ -1,27 +1,55 @@
 {
-  "description": "Simplified Chrome automation: Navigate to Blackboard with basic UIA detection",
+  "description": "Proper Chrome automation: Open Chrome manually, handle profile selection, then navigate to Blackboard",
   "actions": [
     {
       "type": "start_process",
-      "target": "https://blackboard.gwu.edu",
+      "target": "chrome",
       "app_path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-      "description": "Open Blackboard in Chrome browser"
+      "description": "Open Chrome browser manually (not via URL)"
     },
     {
       "type": "wait",
-      "duration": 6,
-      "description": "Wait for Chrome to load and show profile selection or Blackboard"
+      "duration": 3,
+      "description": "Wait for Chrome to start and show profile selection"
+    },
+    {
+      "type": "debug",
+      "target": "Chrome Profile Dialog",
+      "description": "Debug the Chrome profile dialog to see available UIA elements"
+    },
+    {
+      "type": "click",
+      "target": "GWU Profile Button",
+      "button": "left",
+      "element_selector": {
+        "control_type": "Button",
+        "name": "Open GWU profile"
+      },
+      "coordinates": [0, 0],
+      "description": "Click on the GWU profile button in the profile selection dialog"
+    },
+    {
+      "type": "wait",
+      "duration": 3,
+      "description": "Wait for Chrome to load with the GWU profile"
+    },
+    {
+      "type": "detect_click",
+      "target": "Bookmarks and Tabs",
+      "timeout": 2,
+      "continue_on_failure": true,
+      "description": "Detect if user clicked on any bookmarks, tabs, or navigation elements"
     },
     {
       "type": "click",
       "target": "Address Bar",
       "button": "left",
-      "focus_app": "Google",
       "element_selector": {
         "control_type": "Edit",
-        "name": "Address and search bar"
+        "name": "Address and search bar",
+        "class_name": "OmniboxViewViews"
       },
-      "description": "Try to click the address bar using UIA detection"
+      "description": "Click the address bar using proper UIA detection"
     },
     {
       "type": "wait",
@@ -32,7 +60,6 @@
       "type": "type_text",
       "text": "blackboard.gwu.edu",
       "delay": 0.05,
-      "focus_app": "Google",
       "description": "Type the Blackboard URL in the address bar"
     },
     {

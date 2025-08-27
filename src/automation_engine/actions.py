@@ -11,7 +11,7 @@ from typing import Dict, Any, Optional, Union
 from pathlib import Path
 import logging
 import pyautogui
-from .desktop_helper import DesktopHelper
+from desktop_helper import DesktopHelper
 
 logger = logging.getLogger(__name__)
 
@@ -205,6 +205,34 @@ class ActionExecutor:
             logger.error(f"Failed to click '{target}': {e}")
             return False
     
+    def detect_click(self, target: str, **kwargs) -> bool:
+        """
+        Detect if a user clicked on a UI element (like a bookmark, tab, or button).
+        This is useful for understanding user behavior and only typing when necessary.
+        
+        Args:
+            target: Description of element to detect clicks on
+            **kwargs: Additional options like 'timeout' for detection window
+            
+        Returns:
+            bool: True if click detected, False otherwise
+        """
+        try:
+            timeout = kwargs.get('timeout', 5)  # Default 5 second detection window
+            logger.info(f"Detecting clicks on {target} for {timeout} seconds")
+            
+            # For now, this is a placeholder that waits and assumes no click was detected
+            # In a real implementation, this would monitor for mouse clicks or UI changes
+            time.sleep(timeout)
+            
+            # Return False to indicate no click was detected, so we should proceed with typing
+            logger.info(f"No click detected on {target}, proceeding with default action")
+            return False
+            
+        except Exception as e:
+            logger.error(f"Failed to detect clicks on '{target}': {e}")
+            return False
+    
     def set_variable(self, name: str, value: Any) -> None:
         """
         Set a variable for use in scripts.
@@ -248,3 +276,52 @@ class ActionExecutor:
             prompt = kwargs.get('prompt', 'Press Enter to continue...')
             input(f"⏸️  {prompt}")
             return True
+    
+    def debug_elements(self, target: str, **kwargs) -> bool:
+        """
+        Debug UIA elements in the current window to help identify click positioning issues.
+        
+        Args:
+            target: Description of what to debug
+            **kwargs: Additional options
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            logger.info(f"🔍 Debugging UIA elements for: {target}")
+            
+            # Use the desktop helper to debug Chrome elements
+            try:
+                from pywinauto import Desktop
+                
+                # Find any Chrome window
+                windows = Desktop(backend="uia").windows()
+                chrome_window = None
+                
+                for window in windows:
+                    try:
+                        window_text = window.window_text()
+                        if window_text and "chrome" in window_text.lower():
+                            chrome_window = window
+                            break
+                    except:
+                        continue
+                
+                if chrome_window:
+                    self.desktop_helper.debug_chrome_elements(chrome_window)
+                    return True
+                else:
+                    logger.warning("No Chrome window found for debugging")
+                    return False
+                    
+            except ImportError:
+                logger.warning("pywinauto not available for debugging")
+                return False
+            except Exception as e:
+                logger.error(f"Debug failed: {e}")
+                return False
+            
+        except Exception as e:
+            logger.error(f"Failed to debug elements for '{target}': {e}")
+            return False

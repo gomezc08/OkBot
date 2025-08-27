@@ -8,7 +8,7 @@ import time
 from typing import Dict, Any, Union
 from pathlib import Path
 import logging
-from automation_engine.actions import ActionExecutor
+from actions import ActionExecutor
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -38,6 +38,14 @@ class RunAutomationEngine:
     def click(self, target: str, **kwargs) -> bool:
         """Click on a UI element."""
         return self.action_executor.click(target, **kwargs)
+    
+    def detect_click(self, target: str, **kwargs) -> bool:
+        """Detect if a user clicked on a UI element."""
+        return self.action_executor.detect_click(target, **kwargs)
+    
+    def debug_elements(self, target: str, **kwargs) -> bool:
+        """Debug UIA elements in the current window."""
+        return self.action_executor.debug_elements(target, **kwargs)
     
     def set_variable(self, name: str, value: Any) -> None:
         """Set a variable for use in scripts."""
@@ -149,6 +157,18 @@ class RunAutomationEngine:
         
         elif action_type == 'click':
             return self.click(
+                action['target'],
+                **{k: v for k, v in action.items() if k not in ['type', 'target']}
+            )
+        
+        elif action_type == 'detect_click':
+            return self.detect_click(
+                action['target'],
+                **{k: v for k, v in action.items() if k not in ['type', 'target']}
+            )
+        
+        elif action_type == 'debug':
+            return self.debug_elements(
                 action['target'],
                 **{k: v for k, v in action.items() if k not in ['type', 'target']}
             )

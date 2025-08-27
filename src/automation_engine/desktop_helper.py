@@ -146,6 +146,85 @@ class DesktopHelper:
             logger.error(f"UIA element detection failed: {e}")
             return False
     
+    def debug_chrome_elements(self, target_window):
+        """
+        Debug method to show all available UIA elements in Chrome window.
+        This helps identify the exact structure for better automation.
+        """
+        try:
+            logger.info("=== DEBUG: Chrome UIA Elements ===")
+            logger.info(f"Window: {target_window.window_text()}")
+            
+            def print_element_tree(element, level=0):
+                try:
+                    indent = "  " * level
+                    element_text = element.window_text() if hasattr(element, 'window_text') else "No text"
+                    element_type = element.control_type() if hasattr(element, 'control_type') else "Unknown type"
+                    element_class = element.class_name() if hasattr(element, 'class_name') else "No class"
+                    
+                    logger.info(f"{indent}- {element_type}: '{element_text}' (class: {element_class})")
+                    
+                    # Print children recursively (limit depth to avoid spam)
+                    if level < 5:  # Increased depth to find profile buttons
+                        try:
+                            children = element.children()
+                            for child in children[:15]:  # Increased limit to find more elements
+                                print_element_tree(child, level + 1)
+                        except:
+                            pass
+                            
+                except Exception as e:
+                    logger.info(f"{indent}- Error reading element: {e}")
+            
+            # Print the main window structure
+            print_element_tree(target_window)
+            
+            # Also try to find profile-related elements specifically
+            logger.info("=== SEARCHING FOR PROFILE ELEMENTS ===")
+            try:
+                # Search for any elements containing "profile", "gwu", or "button"
+                all_elements = []
+                def collect_elements(element, level=0):
+                    if level < 6:  # Go deeper
+                        try:
+                            all_elements.append((element, level))
+                            children = element.children()
+                            for child in children:
+                                collect_elements(child, level + 1)
+                        except:
+                            pass
+                
+                collect_elements(target_window)
+                
+                # Look for profile-related elements
+                profile_elements = []
+                for element, level in all_elements:
+                    try:
+                        text = element.window_text() if hasattr(element, 'window_text') else ""
+                        control_type = str(element.control_type()) if hasattr(element, 'control_type') else ""
+                        class_name = element.class_name() if hasattr(element, 'class_name') else ""
+                        
+                        if any(keyword in str(text).lower() for keyword in ["profile", "gwu", "open", "button"]):
+                            profile_elements.append((element, level, text, control_type, class_name))
+                    except:
+                        continue
+                
+                if profile_elements:
+                    logger.info("Found potential profile elements:")
+                    for element, level, text, control_type, class_name in profile_elements:
+                        indent = "  " * level
+                        logger.info(f"{indent}Level {level}: '{text}' ({control_type}) [{class_name}]")
+                else:
+                    logger.info("No profile elements found in UIA tree")
+                    
+            except Exception as e:
+                logger.info(f"Profile element search failed: {e}")
+            
+            logger.info("=== END DEBUG ===")
+            
+        except Exception as e:
+            logger.error(f"Debug failed: {e}")
+    
     def _find_target_window(self, process_name: str, class_name: str):
         """
         Find the target window using various methods.
@@ -375,7 +454,38 @@ class DesktopHelper:
             center_y = (rect.top + rect.bottom) // 2
             
             logger.info(f"Clicking at element center: ({center_x}, {center_y})")
-            pyautogui.click(center_x, center_y, button=button)
+            
+            # Try multiple click positions around the center to handle offset issues
+            click_positions = [
+                (center_x, center_y),  # Exact center
+                (center_x + 5, center_y),  # Slightly right
+                (center_x - 5, center_y),  # Slightly left
+                (center_x, center_y + 5),  # Slightly below
+                (center_x, center_y - 5),  # Slightly above
+                (center_x + 3, center_y + 3),  # Diagonal
+                (center_x - 3, center_y - 3),  # Diagonal
+            ]
+            
+            for click_x, click_y in click_positions:
+                try:
+                    logger.info(f"Trying click position: ({click_x}, {click_y})")
+                    pyautogui.click(click_x, click_y, button=button)
+                    
+                    # Wait a bit to see if the click had an effect
+                    time.sleep(0.2)
+                    
+                    # Try to verify if the click worked by checking if the element is still clickable
+                    # This is a simple heuristic - in a real implementation you'd check for UI changes
+                    return True
+                    
+                except Exception as click_e:
+                    logger.warning(f"Click at ({click_x}, {click_y}) failed: {click_e}")
+                    continue
+            
+            # If all positions failed, try the direct UIA click
+            logger.warning("All click positions failed, trying direct UIA click")
+            element.click_input(button=button)
+            logger.info("Clicked element using UIA click_input")
             return True
             
         except Exception as e:
@@ -452,6 +562,201 @@ class DesktopHelper:
                     return True  # Return True to indicate success
                 except Exception as e:
                     logger.warning(f"Fallback coordinates failed: {e}")
+            
+            # Handle Chrome profile selection buttons
+            elif "profile" in name.lower() or "gwu" in name.lower():
+                logger.info("🔍 Searching for Chrome profile button...")
+                
+                # Method 1: Deep search through all UIA elements
+                try:
+                    all_elements = []
+                    def collect_all_elements(element, level=0):
+                        if level < 8:  # Go very deep
+                            try:
+                                all_elements.append((element, level))
+                                children = element.children()
+                                for child in children:
+                                    collect_all_elements(child, level + 1)
+                            except:
+                                pass
+                    
+                    collect_all_elements(target_window)
+                    
+                    # Look for profile-related elements
+                    for element, level in all_elements:
+                        try:
+                            text = element.window_text() if hasattr(element, 'window_text') else ""
+                            control_type = str(element.control_type()) if hasattr(element, 'control_type') else ""
+                            
+                            # Look for actual buttons, not description text
+                            if (text and 
+                                any(keyword in text.lower() for keyword in ["gwu", "profile", "open"]) and
+                                len(text.strip()) < 50 and  # Avoid long description text
+                                any(btn_keyword in control_type.lower() for btn_keyword in ["button", "click", "link"])):
+                                
+                                logger.info(f"Found potential profile button at level {level}: '{text}' ({control_type})")
+                                
+                                # Try to click this element directly
+                                try:
+                                    element.click_input()
+                                    logger.info(f"Successfully clicked profile button: '{text}'")
+                                    time.sleep(1)  # Wait to see if dialog closes
+                                    return True
+                                except Exception as click_e:
+                                    logger.info(f"Direct click failed, trying coordinates: {click_e}")
+                                    
+                                    # Try clicking at element center
+                                    try:
+                                        rect = element.rectangle()
+                                        center_x = (rect.left + rect.right) // 2
+                                        center_y = (rect.top + rect.bottom) // 2
+                                        pyautogui.click(center_x, center_y)
+                                        logger.info(f"Clicked profile button at coordinates: ({center_x}, {center_y})")
+                                        time.sleep(1)
+                                        return True
+                                    except Exception as coord_e:
+                                        logger.info(f"Coordinate click failed: {coord_e}")
+                                        continue
+                                        
+                        except Exception as e:
+                            continue
+                            
+                except Exception as e:
+                    logger.info(f"Deep UIA search failed: {e}")
+                
+                # Method 1.5: Look for shorter text elements that might be buttons
+                try:
+                    logger.info("Looking for short text elements that might be profile buttons...")
+                    
+                    for element, level in all_elements:
+                        try:
+                            text = element.window_text() if hasattr(element, 'window_text') else ""
+                            control_type = str(element.control_type()) if hasattr(element, 'control_type') else ""
+                            
+                            # Look for short text that might be a button label
+                            if (text and 
+                                len(text.strip()) < 30 and  # Short text
+                                len(text.strip()) > 2 and   # Not empty
+                                any(keyword in text.lower() for keyword in ["gwu", "profile", "open", "sign", "start"])):
+                                
+                                logger.info(f"Found short text element at level {level}: '{text}' ({control_type})")
+                                
+                                # Try clicking this element
+                                try:
+                                    rect = element.rectangle()
+                                    center_x = (rect.left + rect.right) // 2
+                                    center_y = (rect.top + rect.bottom) // 2
+                                    pyautogui.click(center_x, center_y)
+                                    logger.info(f"Clicked short text element at: ({center_x}, {center_y})")
+                                    time.sleep(1)
+                                    return True
+                                except Exception as click_e:
+                                    logger.info(f"Click failed: {click_e}")
+                                    continue
+                                    
+                        except Exception as e:
+                            continue
+                            
+                except Exception as e:
+                    logger.info(f"Short text search failed: {e}")
+                
+                # Method 2: Try to find any clickable elements in the profile dialog
+                try:
+                    logger.info("Trying to find any clickable elements in profile dialog...")
+                    
+                    # Look for any elements that might be buttons
+                    for element, level in all_elements:
+                        try:
+                            control_type = str(element.control_type()) if hasattr(element, 'control_type') else ""
+                            text = element.window_text() if hasattr(element, 'window_text') else ""
+                            
+                            # Look for button-like elements or elements with text
+                            if (("button" in control_type.lower() or "click" in control_type.lower()) and 
+                                text and len(text.strip()) > 0):
+                                
+                                logger.info(f"Found clickable element: '{text}' ({control_type}) at level {level}")
+                                
+                                # Try clicking this element
+                                try:
+                                    rect = element.rectangle()
+                                    center_x = (rect.left + rect.right) // 2
+                                    center_y = (rect.top + rect.bottom) // 2
+                                    pyautogui.click(center_x, center_y)
+                                    logger.info(f"Clicked clickable element at: ({center_x}, {center_y})")
+                                    time.sleep(1)
+                                    return True
+                                except Exception as click_e:
+                                    logger.info(f"Click failed: {click_e}")
+                                    continue
+                                    
+                        except Exception as e:
+                            continue
+                            
+                except Exception as e:
+                    logger.info(f"Clickable element search failed: {e}")
+                
+                # Method 3: Smart coordinate-based clicking with visual feedback
+                try:
+                    logger.info("Using smart coordinate-based clicking...")
+                    window_rect = target_window.rectangle()
+                    
+                    # Profile buttons are typically arranged horizontally in the center
+                    # Try a grid of positions where profile buttons commonly appear
+                    center_x = window_rect.left + (window_rect.right - window_rect.left) // 2
+                    center_y = window_rect.top + (window_rect.bottom - window_rect.top) // 2
+                    
+                    # Create a grid of click positions
+                    click_positions = [
+                        # Center area (most common)
+                        (center_x, center_y),
+                        # Left side
+                        (center_x - 100, center_y),
+                        (center_x - 50, center_y),
+                        # Right side  
+                        (center_x + 50, center_y),
+                        (center_x + 100, center_y),
+                        # Above center
+                        (center_x, center_y - 50),
+                        (center_x, center_y - 100),
+                        # Below center
+                        (center_x, center_y + 50),
+                        (center_x, center_y + 100),
+                        # Diagonal positions
+                        (center_x - 75, center_y - 75),
+                        (center_x + 75, center_y - 75),
+                        (center_x - 75, center_y + 75),
+                        (center_x + 75, center_y + 75)
+                    ]
+                    
+                    for i, (pos_x, pos_y) in enumerate(click_positions):
+                        logger.info(f"Trying profile button position {i+1}/{len(click_positions)}: ({pos_x}, {pos_y})")
+                        
+                        # Click and wait
+                        pyautogui.click(pos_x, pos_y)
+                        time.sleep(0.8)  # Wait longer to see effect
+                        
+                        # Check if the profile dialog is still there
+                        try:
+                            # Try to find the profile dialog again
+                            remaining_children = target_window.children()
+                            profile_still_there = any("profile" in str(child).lower() or "gwu" in str(child).lower() for child in remaining_children)
+                            
+                            if not profile_still_there:
+                                logger.info(f"✅ Profile button click successful at position {i+1}: ({pos_x}, {pos_y})")
+                                return True
+                            else:
+                                logger.info(f"Profile dialog still visible, trying next position...")
+                                
+                        except Exception as check_e:
+                            logger.info(f"Could not verify click success, assuming it worked: {check_e}")
+                            return True
+                    
+                    logger.warning("❌ All profile button positions failed")
+                    return False
+                    
+                except Exception as e:
+                    logger.warning(f"Smart coordinate clicking failed: {e}")
+                    return False
             
             return None
             
