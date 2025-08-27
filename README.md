@@ -107,7 +107,7 @@ Customize schema generation by editing `src/create_json_schema/resources/schema_
 Test the generated schema with your UIA event data:
 ```python
 import json
-from jsonschema import validate
+from jsonschema import validate 
 
 # Load your schema and data
 with open('generated_schema.json') as f:
