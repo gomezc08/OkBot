@@ -14,7 +14,7 @@ from automation_engine.actions import ActionExecutor
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class AutomationEngine:
+class RunAutomationEngine:
     """
     Core automation engine that provides basic desktop automation functions.
     """
@@ -174,7 +174,7 @@ def main():
     print("=" * 40)
     
     # Create automation engine
-    engine = AutomationEngine()
+    engine = RunAutomationEngine()
     
     # Load and execute the blackboard example script
     script_path = Path(__file__).parent / "example_scripts" / "blackboard_simple_example.json"
