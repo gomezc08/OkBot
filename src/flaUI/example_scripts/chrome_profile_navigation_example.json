@@ -1,0 +1,85 @@
+{
+  "description": "Chrome automation: Profile selection and navigation workflow",
+  "actions": [
+    {
+      "type": "start_process",
+      "target": "https://www.google.com",
+      "app_path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "description": "Open Google in Chrome to trigger profile selection"
+    },
+    {
+      "type": "wait",
+      "duration": 4,
+      "description": "Wait for Chrome to load and show profile selection dialog"
+    },
+    {
+      "type": "click",
+      "target": "GWU Profile Button",
+      "button": "left",
+      "focus_app": "Google",
+      "element_selector": {
+        "control_type": "Button",
+        "name": "Open GWU profile",
+        "process_name": "chrome.exe"
+      },
+      "description": "Click the GWU profile button to select the correct Chrome profile"
+    },
+    {
+      "type": "wait",
+      "duration": 3,
+      "description": "Wait for profile to load and Chrome to open"
+    },
+    {
+      "type": "click",
+      "target": "Address Bar",
+      "button": "left",
+      "focus_app": "Google",
+      "element_selector": {
+        "control_type": "Edit",
+        "name": "Address and search bar",
+        "class_name": "OmniboxViewViews"
+      },
+      "description": "Click on the address bar to focus it for navigation"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Wait for address bar to be focused"
+    },
+    {
+      "type": "type_text",
+      "text": "blackboard.gwu.edu",
+      "delay": 0.05,
+      "focus_app": "Google",
+      "description": "Type the Blackboard URL in the address bar"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Wait for URL to be entered"
+    },
+    {
+      "type": "click",
+      "target": "Navigate Button",
+      "button": "left",
+      "keyboard_shortcut": "enter",
+      "description": "Press Enter to navigate to Blackboard"
+    },
+    {
+      "type": "wait",
+      "duration": 5,
+      "description": "Wait for Blackboard to load"
+    },
+    {
+      "type": "set_variable",
+      "name": "status",
+      "value": "Successfully navigated to Blackboard using GWU Chrome profile!",
+      "description": "Set success status message"
+    },
+    {
+      "type": "wait",
+      "duration": 2,
+      "description": "Show success message and keep browser open"
+    }
+  ]
+}

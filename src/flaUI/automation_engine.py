@@ -640,7 +640,7 @@ def main():
         ]
     }
 
-    script_path = Path(__file__).parent / "example_scripts" / "chrome_example.json"
+    script_path = Path(__file__).parent / "example_scripts" / "blackboard_simple_example.json"
     with open(script_path, "r") as f:
         example_script = json.load(f)
     

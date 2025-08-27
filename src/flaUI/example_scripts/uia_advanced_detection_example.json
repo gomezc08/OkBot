@@ -1,0 +1,126 @@
+{
+  "description": "Advanced UIA element detection examples based on Chrome automation patterns",
+  "actions": [
+    {
+      "type": "start_process",
+      "target": "https://www.google.com",
+      "app_path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "description": "Open Chrome to demonstrate UIA element detection"
+    },
+    {
+      "type": "wait",
+      "duration": 4,
+      "description": "Wait for Chrome to load"
+    },
+    {
+      "type": "click",
+      "target": "Profile Selection (by name)",
+      "button": "left",
+      "focus_app": "Google",
+      "element_selector": {
+        "control_type": "Button",
+        "name": "Open GWU profile",
+        "process_name": "chrome.exe"
+      },
+      "description": "Click profile button using name-based detection"
+    },
+    {
+      "type": "wait",
+      "duration": 3,
+      "description": "Wait for profile to load"
+    },
+    {
+      "type": "click",
+      "target": "Address Bar (by class)",
+      "button": "left",
+      "focus_app": "Google",
+      "element_selector": {
+        "control_type": "Edit",
+        "class_name": "OmniboxViewViews",
+        "process_name": "chrome.exe"
+      },
+      "description": "Click address bar using class-based detection"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Wait for address bar focus"
+    },
+    {
+      "type": "type_text",
+      "text": "chrome://settings",
+      "delay": 0.05,
+      "focus_app": "Google",
+      "description": "Type Chrome settings URL to test navigation"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Wait for URL entry"
+    },
+    {
+      "type": "click",
+      "target": "Navigate (keyboard shortcut)",
+      "button": "left",
+      "keyboard_shortcut": "enter",
+      "description": "Navigate using Enter key"
+    },
+    {
+      "type": "wait",
+      "duration": 3,
+      "description": "Wait for settings page to load"
+    },
+    {
+      "type": "click",
+      "target": "Search Settings (by partial name)",
+      "button": "left",
+      "focus_app": "Google",
+      "element_selector": {
+        "control_type": "Edit",
+        "name": "Search",
+        "process_name": "chrome.exe"
+      },
+      "description": "Click search box using partial name matching"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Wait for search box focus"
+    },
+    {
+      "type": "type_text",
+      "text": "profiles",
+      "delay": 0.05,
+      "focus_app": "Google",
+      "description": "Type search term for profile settings"
+    },
+    {
+      "type": "wait",
+      "duration": 2,
+      "description": "Wait for search results"
+    },
+    {
+      "type": "click",
+      "target": "Back to Google (keyboard shortcut)",
+      "button": "left",
+      "keyboard_shortcut": "alt+left",
+      "description": "Go back to Google using Alt+Left arrow"
+    },
+    {
+      "type": "wait",
+      "duration": 3,
+      "description": "Wait for navigation back to Google"
+    },
+    {
+      "type": "set_variable",
+      "name": "demo_complete",
+      "value": "Advanced UIA detection demo completed successfully!",
+      "description": "Set completion message"
+    },
+    {
+      "type": "wait",
+      "duration": 2,
+      "description": "Show completion message"
+    }
+  ]
+}

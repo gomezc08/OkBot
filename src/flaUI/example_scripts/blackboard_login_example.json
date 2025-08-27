@@ -1,0 +1,172 @@
+{
+  "description": "Chrome automation: Select GWU profile and navigate to Blackboard",
+  "actions": [
+    {
+      "type": "start_process",
+      "target": "https://blackboard.gwu.edu",
+      "app_path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "description": "Open Blackboard in Chrome browser"
+    },
+    {
+      "type": "wait",
+      "duration": 5,
+      "description": "Wait for Chrome to load and show profile selection"
+    },
+    {
+      "type": "click",
+      "target": "GWU Profile Button",
+      "button": "left",
+      "focus_app": "Google",
+      "element_selector": {
+        "control_type": "Button",
+        "name": "Open GWU profile",
+        "process_name": "chrome.exe"
+      },
+      "description": "Click the GWU profile button to select the correct Chrome profile"
+    },
+    {
+      "type": "wait",
+      "duration": 3,
+      "description": "Wait for profile to load and Chrome to navigate"
+    },
+    {
+      "type": "click",
+      "target": "Address Bar",
+      "button": "left",
+      "focus_app": "Google",
+      "element_selector": {
+        "control_type": "Edit",
+        "name": "Address and search bar",
+        "class_name": "OmniboxViewViews"
+      },
+      "description": "Click on the address bar to focus it for navigation"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Wait for address bar to be focused"
+    },
+    {
+      "type": "type_text",
+      "text": "blackboard.gwu.edu/ultra/course",
+      "delay": 0.05,
+      "focus_app": "Google",
+      "description": "Type the Blackboard courses URL directly in the address bar"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Wait for URL to be entered"
+    },
+    {
+      "type": "click",
+      "target": "Enter Key",
+      "button": "left",
+      "keyboard_shortcut": "enter",
+      "description": "Press Enter to navigate to Blackboard"
+    },
+    {
+      "type": "wait",
+      "duration": 5,
+      "description": "Wait for Blackboard to load and redirect to Microsoft login"
+    },
+    {
+      "type": "set_variable",
+      "name": "username",
+      "value": "",
+      "description": "Set username variable (will be filled by user input)"
+    },
+    {
+      "type": "wait",
+      "prompt": "Enter your GWU username and press Enter:",
+      "description": "Wait for user to enter username"
+    },
+    {
+      "type": "type_text",
+      "text": "${username}",
+      "delay": 0.05,
+      "focus_app": "Microsoft",
+      "description": "Type the username in the Microsoft login form"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Wait for username to be entered"
+    },
+    {
+      "type": "click",
+      "target": "Next Button",
+      "button": "left",
+      "keyboard_shortcut": "enter",
+      "description": "Press Enter to proceed to password field"
+    },
+    {
+      "type": "wait",
+      "duration": 3,
+      "description": "Wait for password field to appear"
+    },
+    {
+      "type": "set_variable",
+      "name": "password",
+      "value": "",
+      "description": "Set password variable (will be filled by user input)"
+    },
+    {
+      "type": "wait",
+      "prompt": "Enter your GWU password and press Enter:",
+      "description": "Wait for user to enter password"
+    },
+    {
+      "type": "type_text",
+      "text": "${password}",
+      "delay": 0.05,
+      "focus_app": "Microsoft",
+      "description": "Type the password in the Microsoft login form"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Wait for password to be entered"
+    },
+    {
+      "type": "click",
+      "target": "Sign In Button",
+      "button": "left",
+      "keyboard_shortcut": "enter",
+      "description": "Press Enter to sign in"
+    },
+    {
+      "type": "wait",
+      "duration": 8,
+      "description": "Wait for authentication and redirect to Blackboard"
+    },
+    {
+      "type": "click",
+      "target": "Address Bar",
+      "button": "left",
+      "focus_app": "Blackboard",
+      "element_selector": {
+        "control_type": "Edit",
+        "name": "Address and search bar",
+        "class_name": "OmniboxViewViews"
+      },
+      "description": "Click address bar to verify we're on Blackboard"
+    },
+    {
+      "type": "wait",
+      "duration": 2,
+      "description": "Wait to confirm successful navigation"
+    },
+    {
+      "type": "set_variable",
+      "name": "success_message",
+      "value": "Successfully logged into Blackboard! You can now access your courses.",
+      "description": "Set success message"
+    },
+    {
+      "type": "wait",
+      "duration": 3,
+      "description": "Show the success message and keep Blackboard open"
+    }
+  ]
+}

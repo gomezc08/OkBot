@@ -1,0 +1,67 @@
+{
+  "description": "Simplified Chrome automation: Navigate to Blackboard with basic UIA detection",
+  "actions": [
+    {
+      "type": "start_process",
+      "target": "https://blackboard.gwu.edu",
+      "app_path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "description": "Open Blackboard in Chrome browser"
+    },
+    {
+      "type": "wait",
+      "duration": 6,
+      "description": "Wait for Chrome to load and show profile selection or Blackboard"
+    },
+    {
+      "type": "click",
+      "target": "Address Bar",
+      "button": "left",
+      "focus_app": "Google",
+      "element_selector": {
+        "control_type": "Edit",
+        "name": "Address and search bar"
+      },
+      "description": "Try to click the address bar using UIA detection"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Wait for address bar to be focused"
+    },
+    {
+      "type": "type_text",
+      "text": "blackboard.gwu.edu",
+      "delay": 0.05,
+      "focus_app": "Google",
+      "description": "Type the Blackboard URL in the address bar"
+    },
+    {
+      "type": "wait",
+      "duration": 1,
+      "description": "Wait for URL to be entered"
+    },
+    {
+      "type": "click",
+      "target": "Navigate",
+      "button": "left",
+      "keyboard_shortcut": "enter",
+      "description": "Press Enter to navigate to Blackboard"
+    },
+    {
+      "type": "wait",
+      "duration": 5,
+      "description": "Wait for Blackboard to load"
+    },
+    {
+      "type": "set_variable",
+      "name": "status",
+      "value": "Successfully navigated to Blackboard!",
+      "description": "Set success status message"
+    },
+    {
+      "type": "wait",
+      "duration": 3,
+      "description": "Show success message and keep browser open"
+    }
+  ]
+}
