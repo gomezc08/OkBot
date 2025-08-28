@@ -1,6 +1,6 @@
 """
 Core Action Execution Functions for OkBot FlaUI Automation Engine
-Provides the main automation actions like starting processes, clicking, typing, etc.
+Provides the main automation actions like clicking, typing, loading, and waiting for user input.
 """
 
 import json
@@ -11,7 +11,10 @@ from typing import Dict, Any, Optional, Union
 from pathlib import Path
 import logging
 import pyautogui
-from desktop_helper import DesktopHelper
+import pygetwindow as gw
+import requests
+from urllib.parse import urlparse
+from conditions import Conditions   
 
 logger = logging.getLogger(__name__)
 
@@ -23,305 +26,156 @@ class ActionExecutor:
     def __init__(self):
         self.variables = {}  # Store variables for script execution
         self.timeout_default = 30  # Default timeout in seconds
-        self.desktop_helper = DesktopHelper()
-        
-    def start_process(self, target: str, **kwargs) -> bool:
+    
+    def click(self, data: Dict[str, Any]) -> bool:
         """
-        Start a process or open a URL in an application.
+        Click action with fallback to coordinates.
         
-        Args:
-            target: Process name/path or URL to open
-            **kwargs: Additional options like 'app_path' for specific application path
+        Schema:
+        {
+            "type": "click",
+            "target": "GWU Profile Button",
+            "button": "left",
+            "element_selector": {
+                "name": "Open GWU profile",
+                "control_type": "Button",
+                "class_name": "Chrome_WidgetWin_1",
+                "process_name": "chrome",
+                "ancestor_path": ["RootView", "ProfilePickerView"]
+            },
+            "coordinate_selector": {
+                "coords": {
+                    "x": 727,
+                    "y": 673
+                },
+                "bbox": {
+                    "left": 680,
+                    "top": 640,
+                    "right": 780,
+                    "bottom": 705
+                }
+            },
+            "description": "Click the GWU profile button"
+        }
+        """            
+        target = data.get("target")
+        button = data.get("button", "left")
+        description = data.get("description", f"Click {target}")
+        
+        logger.info(f"Executing click action: {description}")
+        
+        # Try element-based clicking first (UIA)
+        element_selector = data.get("element_selector")
+        if element_selector:
+            logger.info(f"Attempting UIA-based click on element: {element_selector.get('name', 'Unknown')}")
+            # Here you would integrate with your UIA listener for element-based clicking
+            # For now, we'll simulate success and fall back to coordinates
+            success = False  # Placeholder - implement actual UIA clicking
             
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        try:
-            app_path = kwargs.get('app_path')
-            
-            # Handle URL.
-            if target.startswith(('http://', 'https://')):
-                # Handle URL opening
-                if app_path and Path(app_path).exists():
-                    # Use specified app path for URL
-                    subprocess.Popen([app_path, target])
-                    logger.info(f"Opened URL in specified app: {target}")
-                    return True
-                else:
-                    # Open in default browser
-                    webbrowser.open(target)
-                    logger.info(f"Opened URL in default browser: {target}")
-                    return True
-            # Handle desktop application.
+            if success:
+                logger.info("UIA-based click successful")
+                return True
             else:
-                # Handle process launching
-                if app_path:
-                    # Use specified app path
-                    if Path(app_path).exists():
-                        subprocess.Popen([app_path])
-                        logger.info(f"Started process with path: {app_path}")
-                        return True
-                    else:
-                        logger.error(f"App path not found: {app_path}")
-                        return False
-                else:
-                    # Try to launch the target directly (let Windows handle it)
-                    subprocess.Popen([target])
-                    logger.info(f"Started process: {target}")
-                    return True
-                    
-        except Exception as e:
-            logger.error(f"Failed to start process '{target}': {e}")
-            return False
-    
-    def wait_for(self, condition: str, timeout: Optional[int] = None, **kwargs) -> bool:
-        """
-        Wait for a condition to be met (placeholder for element detection).
+                logger.info("UIA-based click failed, falling back to coordinates")
         
-        Args:
-            condition: Description of what to wait for
-            timeout: Timeout in seconds (uses default if None)
-            **kwargs: Additional condition parameters
-            
-        Returns:
-            bool: True if condition met, False if timeout
-        """
-        timeout = timeout or self.timeout_default
-        logger.info(f"Waiting for: {condition} (timeout: {timeout}s)")
-        
-        # For now, just wait a bit and return True
-        # In a real implementation, this would check for UI elements
-        time.sleep(2)
-        logger.info(f"Condition met: {condition}")
-        return True
-    
-    def type_text(self, text: str, **kwargs) -> bool:
-        """
-        Type text into the active application.
-        
-        Args:
-            text: Text to type (can be variable reference like ${var_name})
-            **kwargs: Additional options like 'delay' between characters, 'focus_app' for app name
-            
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        try:
-            # Handle variable substitution
-            if text.startswith('${') and text.endswith('}'):
-                var_name = text[2:-1]
-                if var_name in self.variables:
-                    text = str(self.variables[var_name])
-                    logger.info(f"Substituted variable {var_name} with value: {text}")
-                else:
-                    logger.warning(f"Variable {var_name} not found")
-                    return False
-            
-            delay = kwargs.get('delay', 0.01)  # Default 10ms delay between characters
-            focus_app = kwargs.get('focus_app')  # Optional app name to focus
-            
-            try:
-                # Set a small delay to prevent issues
-                pyautogui.PAUSE = 0.01
+        # Fall back to coordinate-based clicking
+        coordinate_selector = data.get("coordinate_selector")
+        if coordinate_selector:
+            coords = coordinate_selector.get("coords")
+            if coords and "x" in coords and "y" in coords:
+                x, y = coords["x"], coords["y"]
+                logger.info(f"Clicking at coordinates: ({x}, {y})")
                 
-                # Focus the target application if specified
-                if focus_app:
-                    self.desktop_helper.focus_application(focus_app)
-                
-                logger.info(f"Typing text: '{text}' (delay: {delay}s)")
-                
-                # Actually type the text
-                pyautogui.write(text, interval=delay)
-                
-                return True
-                
-            except ImportError:
-                logger.warning("pyautogui not installed, falling back to simulation")
-                # Fallback to simulation if pyautogui is not available
-                logger.info(f"Simulating typing text: '{text}' (delay: {delay}s)")
-                time.sleep(len(text) * delay)
-                return True
-            
-        except Exception as e:
-            logger.error(f"Failed to type text '{text}': {e}")
-            return False
-    
-    def click(self, target: str, **kwargs) -> bool:
-        """
-        Click on a UI element.
-        
-        Args:
-            target: Description of element to click
-            **kwargs: Additional options like 'button' (left/right/middle), 'coordinates' for x,y position,
-                     'element_selector' for UIA-based element detection, 'keyboard_shortcut' for keyboard actions
-            
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        try:
-            button = kwargs.get('button', 'left')
-            coordinates = kwargs.get('coordinates')  # Optional x,y coordinates
-            focus_app = kwargs.get('focus_app')  # Optional app to focus before clicking
-            element_selector = kwargs.get('element_selector')  # UIA element selector
-            keyboard_shortcut = kwargs.get('keyboard_shortcut')  # Keyboard shortcut (e.g., 'alt+f4')
-            
-            logger.info(f"Clicking {target} with {button} button")
-            
-            # Focus the target application if specified
-            if focus_app:
-                self.desktop_helper.focus_application_for_click(focus_app)
-            
-            # Try keyboard shortcut first (most reliable for window actions)
-            if keyboard_shortcut:
-                logger.info(f"Using keyboard shortcut: {keyboard_shortcut}")
                 try:
-                    pyautogui.hotkey(*keyboard_shortcut.split('+'))
-                    logger.info(f"Executed keyboard shortcut: {keyboard_shortcut}")
+                    pyautogui.click(x, y, button=button)
+                    logger.info("Coordinate-based click successful")
                     return True
                 except Exception as e:
-                    logger.warning(f"Keyboard shortcut failed: {e}")
-            
-            # Try UIA-based element detection
-            if element_selector:
-                success = self.desktop_helper.click_by_uia(element_selector, button)
-                if success:
-                    return True
-                else:
-                    logger.warning("UIA element detection failed, falling back to coordinates")
-            
-            # Perform the actual click
-            if coordinates:
-                x, y = coordinates
-                logger.info(f"Clicking at coordinates: ({x}, {y})")
-                pyautogui.click(x, y, button=button)
-            else:
-                # For now, just log the action (future: implement element detection)
-                logger.info(f"Clicking {target} (coordinates not specified)")
-                time.sleep(0.5)  # Simulate click delay
-            
-            return True
-            
-        except Exception as e:
-            logger.error(f"Failed to click '{target}': {e}")
-            return False
-    
-    def detect_click(self, target: str, **kwargs) -> bool:
-        """
-        Detect if a user clicked on a UI element (like a bookmark, tab, or button).
-        This is useful for understanding user behavior and only typing when necessary.
-        
-        Args:
-            target: Description of element to detect clicks on
-            **kwargs: Additional options like 'timeout' for detection window
-            
-        Returns:
-            bool: True if click detected, False otherwise
-        """
-        try:
-            timeout = kwargs.get('timeout', 5)  # Default 5 second detection window
-            logger.info(f"Detecting clicks on {target} for {timeout} seconds")
-            
-            # For now, this is a placeholder that waits and assumes no click was detected
-            # In a real implementation, this would monitor for mouse clicks or UI changes
-            time.sleep(timeout)
-            
-            # Return False to indicate no click was detected, so we should proceed with typing
-            logger.info(f"No click detected on {target}, proceeding with default action")
-            return False
-            
-        except Exception as e:
-            logger.error(f"Failed to detect clicks on '{target}': {e}")
-            return False
-    
-    def set_variable(self, name: str, value: Any) -> None:
-        """
-        Set a variable for use in scripts.
-        
-        Args:
-            name: Variable name
-            value: Variable value
-        """
-        self.variables[name] = value
-        logger.info(f"Set variable {name} = {value}")
-    
-    def get_variable(self, name: str) -> Any:
-        """
-        Get a variable value.
-        
-        Args:
-            name: Variable name
-            
-        Returns:
-            Variable value or None if not found
-        """
-        return self.variables.get(name)
-    
-    def wait(self, duration: int = 0, **kwargs) -> bool:
-        """
-        Wait for a specified duration or wait for human input.
-        
-        Args:
-            duration: Duration to wait in seconds
-            **kwargs: Additional options like 'prompt' for human input
-            
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        if duration > 0:
-            # Simple delay
-            time.sleep(duration)
-            return True
-        else:
-            # Wait for human input (for sensitive data like passwords)
-            prompt = kwargs.get('prompt', 'Press Enter to continue...')
-            input(f"⏸️  {prompt}")
-            return True
-    
-    def debug_elements(self, target: str, **kwargs) -> bool:
-        """
-        Debug UIA elements in the current window to help identify click positioning issues.
-        
-        Args:
-            target: Description of what to debug
-            **kwargs: Additional options
-            
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        try:
-            logger.info(f"🔍 Debugging UIA elements for: {target}")
-            
-            # Use the desktop helper to debug Chrome elements
-            try:
-                from pywinauto import Desktop
-                
-                # Find any Chrome window
-                windows = Desktop(backend="uia").windows()
-                chrome_window = None
-                
-                for window in windows:
-                    try:
-                        window_text = window.window_text()
-                        if window_text and "chrome" in window_text.lower():
-                            chrome_window = window
-                            break
-                    except:
-                        continue
-                
-                if chrome_window:
-                    self.desktop_helper.debug_chrome_elements(chrome_window)
-                    return True
-                else:
-                    logger.warning("No Chrome window found for debugging")
+                    logger.error(f"Coordinate-based click failed: {e}")
                     return False
-                    
-            except ImportError:
-                logger.warning("pywinauto not available for debugging")
-                return False
-            except Exception as e:
-                logger.error(f"Debug failed: {e}")
-                return False
-            
+        
+        logger.error("No valid click target found (neither element selector nor coordinates)")
+        return False
+    
+    def type_text(self, data: Dict[str, Any]) -> bool:
+        """
+        Type text action.
+        
+        Schema:
+        {
+            "type": "type_text",
+            "text": "my.email@gwu.edu",
+            "description": "Enter email in focused field"
+        }
+        """            
+        text = data.get("text")
+        description = data.get("description", f"Type text: {text[:20]}...")
+        
+        logger.info(f"Executing type_text action: {description}")
+        
+        try:
+            pyautogui.typewrite(text)
+            logger.info("Text typing successful")
+            return True
         except Exception as e:
-            logger.error(f"Failed to debug elements for '{target}': {e}")
+            logger.error(f"Text typing failed: {e}")
             return False
+    
+    def load(self, data: Dict[str, Any]) -> bool:
+        """
+        Load action - wait for conditions to be met.
+        """
+        description = data.get("description")
+        condition = data.get("condition")
+        timeout = data.get("timeout", self.timeout_default)
+        condition_type = condition["type"]
+        condition_value = condition["value"]
+
+        logger.info(f"Executing load action: {description}")
+        logger.info(f"Waiting for condition: {condition_type} = {condition_value}")
+
+        if condition_type == "url.contains" or condition_type == "url.is":
+            logger.info(f"Waiting until URL contains: {condition_value}")
+            start_time = time.time()
+            while time.time() - start_time < timeout:
+                if Conditions.url_contains_or_is(condition_value):
+                    logger.info("URL condition met successfully")
+                    return True
+                time.sleep(0.5)
+            logger.warning(f"URL condition not met within {timeout}s")
+            return False
+
+        if condition_type == "uia.exists" or condition_type == "uia.not_exists":
+            logger.info(f"Waiting until UIA element exists: {condition_value}")
+            start_time = time.time()
+            while time.time() - start_time < timeout:
+                if Conditions.uia_exists_or_not_exists(condition_value):
+                    logger.info("UIA condition met successfully")
+                    return True
+                time.sleep(0.5)
+            logger.warning(f"UIA condition not met within {timeout}s")
+            return False
+
+        logger.error(f"Unknown condition type: {condition_type}")
+        return False
+
+    
+    def wait_user_input(self, data: Dict[str, Any]) -> bool:
+        """
+        Wait for user input action.
+        
+        Schema:
+        {
+            "type": "wait_user",
+            "description": "Wait for user to complete login and reach inbox",
+            "condition": {
+                "type": "url.contains",
+                "value": "mail.google.com/mail/u/0/#inbox"
+            },
+            "timeout": 120
+        }
+        """
+            
+        description = data.get("description")
+        condition = data.get("condition")
+        timeout = data.get("timeout", self.timeout_default)

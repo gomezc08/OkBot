@@ -1,0 +1,131 @@
+[
+  {
+    "type": "click",
+    "target": "Gmail Link",
+    "button": "left",
+    "element_selector": {
+      "name": "Gmail ",
+      "control_type": "Hyperlink",
+      "class_name": "gb_X",
+      "process_name": "chrome"
+    },
+    "coordinate_selector": {
+      "coords": {
+        "x": 1871,
+        "y": 211
+      },
+      "bbox": {
+        "left": 1860,
+        "top": 200,
+        "right": 1890,
+        "bottom": 220
+      }
+    },
+    "description": "Click on Gmail link in Chrome"
+  },
+  {
+    "type": "load",
+    "description": "Wait for Gmail to load",
+    "condition": {
+      "type": "url.contains",
+      "value": "mail.google.com"
+    },
+    "timeout": 20
+  },
+  {
+    "type": "click",
+    "target": "Email Input Field",
+    "button": "left",
+    "element_selector": {
+      "name": "Email or phone",
+      "control_type": "Edit",
+      "process_name": "chrome"
+    },
+    "coordinate_selector": {
+      "coords": {
+        "x": 380,
+        "y": 21
+      },
+      "bbox": {
+        "left": 360,
+        "top": 10,
+        "right": 400,
+        "bottom": 35
+      }
+    },
+    "description": "Click on email input field"
+  },
+  {
+    "type": "type_text",
+    "text": "user@example.com",
+    "description": "Enter email address"
+  },
+  {
+    "type": "click",
+    "target": "Next Button",
+    "button": "left",
+    "element_selector": {
+      "name": "Next",
+      "control_type": "Button",
+      "process_name": "chrome"
+    },
+    "coordinate_selector": {
+      "coords": {
+        "x": 491,
+        "y": 450
+      },
+      "bbox": {
+        "left": 470,
+        "top": 430,
+        "right": 510,
+        "bottom": 470
+      }
+    },
+    "description": "Click Next button to proceed to password"
+  },
+  {
+    "type": "load",
+    "description": "Wait for password field to appear",
+    "condition": {
+      "type": "uia.exists",
+      "selector": {
+        "name": "Enter your password",
+        "control_type": "Edit",
+        "process_name": "chrome"
+      }
+    },
+    "timeout": 15
+  },
+  {
+    "type": "wait_user_input",
+    "description": "Wait for user to enter password and complete login",
+    "condition": {
+      "type": "url.contains",
+      "value": "mail.google.com/mail/u/0/#inbox"
+    },
+    "timeout": 120
+  },
+  {
+    "type": "click",
+    "target": "Compose Button",
+    "button": "left",
+    "element_selector": {
+      "name": "Compose",
+      "control_type": "Button",
+      "process_name": "chrome"
+    },
+    "coordinate_selector": {
+      "coords": {
+        "x": 754,
+        "y": 1210
+      },
+      "bbox": {
+        "left": 740,
+        "top": 1190,
+        "right": 770,
+        "bottom": 1230
+      }
+    },
+    "description": "Click Compose button to start new email"
+  }
+]

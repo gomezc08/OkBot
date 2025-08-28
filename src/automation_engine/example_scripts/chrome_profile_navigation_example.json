@@ -1,85 +1,113 @@
-{
-  "description": "Chrome automation: Profile selection and navigation workflow",
-  "actions": [
-    {
-      "type": "start_process",
-      "target": "https://www.google.com",
-      "app_path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-      "description": "Open Google in Chrome to trigger profile selection"
+[
+  {
+    "type": "click",
+    "target": "Chrome Profile Picker",
+    "button": "left",
+    "element_selector": {
+      "name": "Who's using Chrome?",
+      "control_type": "Window",
+      "class_name": "Chrome_WidgetWin_1",
+      "process_name": "chrome"
     },
-    {
-      "type": "wait",
-      "duration": 4,
-      "description": "Wait for Chrome to load and show profile selection dialog"
-    },
-    {
-      "type": "click",
-      "target": "GWU Profile Button",
-      "button": "left",
-      "focus_app": "Google",
-      "element_selector": {
-        "control_type": "Button",
-        "name": "Open GWU profile",
-        "process_name": "chrome.exe"
+    "coordinate_selector": {
+      "coords": {
+        "x": 913,
+        "y": 1477
       },
-      "description": "Click the GWU profile button to select the correct Chrome profile"
+      "bbox": {
+        "left": 900,
+        "top": 1460,
+        "right": 930,
+        "bottom": 1490
+      }
     },
-    {
-      "type": "wait",
-      "duration": 3,
-      "description": "Wait for profile to load and Chrome to open"
+    "description": "Click on Chrome profile picker window"
+  },
+  {
+    "type": "load",
+    "description": "Wait for profile picker to load",
+    "condition": {
+      "type": "uia.exists",
+      "selector": {
+        "name": "ProfilePickerView",
+        "control_type": "Pane",
+        "process_name": "chrome"
+      }
     },
-    {
-      "type": "click",
-      "target": "Address Bar",
-      "button": "left",
-      "focus_app": "Google",
-      "element_selector": {
-        "control_type": "Edit",
-        "name": "Address and search bar",
-        "class_name": "OmniboxViewViews"
+    "timeout": 10
+  },
+  {
+    "type": "click",
+    "target": "Add Profile Button",
+    "button": "left",
+    "element_selector": {
+      "name": "Add",
+      "control_type": "Button",
+      "class_name": "profile-item",
+      "process_name": "chrome"
+    },
+    "coordinate_selector": {
+      "coords": {
+        "x": 1227,
+        "y": 751
       },
-      "description": "Click on the address bar to focus it for navigation"
+      "bbox": {
+        "left": 1200,
+        "top": 730,
+        "right": 1250,
+        "bottom": 770
+      }
     },
-    {
-      "type": "wait",
-      "duration": 1,
-      "description": "Wait for address bar to be focused"
+    "description": "Click the Add profile button"
+  },
+  {
+    "type": "load",
+    "description": "Wait for new profile creation dialog",
+    "condition": {
+      "type": "uia.exists",
+      "selector": {
+        "name": "Create a profile",
+        "control_type": "Window",
+        "process_name": "chrome"
+      }
     },
-    {
-      "type": "type_text",
-      "text": "blackboard.gwu.edu",
-      "delay": 0.05,
-      "focus_app": "Google",
-      "description": "Type the Blackboard URL in the address bar"
+    "timeout": 15
+  },
+  {
+    "type": "type_text",
+    "text": "Test Profile",
+    "description": "Enter profile name"
+  },
+  {
+    "type": "click",
+    "target": "Create Profile Button",
+    "button": "left",
+    "element_selector": {
+      "name": "Create",
+      "control_type": "Button",
+      "process_name": "chrome"
     },
-    {
-      "type": "wait",
-      "duration": 1,
-      "description": "Wait for URL to be entered"
+    "coordinate_selector": {
+      "coords": {
+        "x": 1872,
+        "y": 239
+      },
+      "bbox": {
+        "left": 1850,
+        "top": 220,
+        "right": 1890,
+        "bottom": 260
+      }
     },
-    {
-      "type": "click",
-      "target": "Navigate Button",
-      "button": "left",
-      "keyboard_shortcut": "enter",
-      "description": "Press Enter to navigate to Blackboard"
+    "description": "Click Create profile button"
+  },
+  {
+    "type": "wait_user_input",
+    "description": "Wait for user to complete profile setup",
+    "condition": {
+      "type": "url.contains",
+      "value": "chrome://welcome"
     },
-    {
-      "type": "wait",
-      "duration": 5,
-      "description": "Wait for Blackboard to load"
-    },
-    {
-      "type": "set_variable",
-      "name": "status",
-      "value": "Successfully navigated to Blackboard using GWU Chrome profile!",
-      "description": "Set success status message"
-    },
-    {
-      "type": "wait",
-      "duration": 2,
-      "description": "Show success message and keep browser open"
-    }
-  ]
-}
+    "timeout": 60
+  }
+]
