@@ -1,7 +1,6 @@
-src/uia_listener/bin/
-src/uia_listener/obj/ 
+**/bin/
+**/obj/ 
 src/create_json_schema/resources/
 *.env
-src/open_ai/__pycache__/
+**/__pycache__/
 venv/
-src/tkinter_ui/__pycache__/

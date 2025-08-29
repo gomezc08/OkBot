@@ -10,6 +10,14 @@ python-dotenv>=1.0.0
 # MySQL Connector/Python
 mysql-connector-python>=9.0.0
 
+# pyautogui
+pyautogui>=0.9.54
+pygetwindow>=0.0.10
+
+# requests
+requests>=2.31.0
+
+
 # Standard library packages (included with Python 3.7+)
 # - json
 # - os
