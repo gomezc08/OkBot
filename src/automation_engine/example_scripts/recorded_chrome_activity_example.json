@@ -60,47 +60,10 @@
     "type": "load",
     "description": "Wait for profile creation dialog to appear",
     "condition": {
-      "type": "uia.exists",
-      "selector": {
-        "name": "Create a profile",
-        "control_type": "Window",
-        "process_name": "chrome"
-      }
+      "type": "url.is",
+      "value": ""
     },
     "timeout": 15
-  },
-  {
-    "type": "click",
-    "target": "Create Profile Button",
-    "button": "left",
-    "element_selector": {
-      "name": "Create",
-      "control_type": "Button",
-      "process_name": "chrome"
-    },
-    "coordinate_selector": {
-      "coords": {
-        "x": 1872,
-        "y": 239
-      },
-      "bbox": {
-        "left": 1850,
-        "top": 220,
-        "right": 1890,
-        "bottom": 260
-      }
-    },
-    "description": "Click Create button to finalize profile creation"
-  },
-  {
-    "type": "load",
-    "description": "Wait for new Chrome window to open with new profile",
-    "condition": {
-      "type": "url.contains",
-      "value": "chrome://welcome"
-    },
-    "url": "chrome://welcome",
-    "timeout": 20
   },
   {
     "type": "click",
@@ -186,51 +149,5 @@
       }
     },
     "description": "Click Next button to proceed to password entry"
-  },
-  {
-    "type": "load",
-    "description": "Wait for password field to appear",
-    "condition": {
-      "type": "uia.exists",
-      "selector": {
-        "name": "Enter your password",
-        "control_type": "Edit",
-        "process_name": "chrome"
-      }
-    },
-    "timeout": 15
-  },
-  {
-    "type": "wait_user_input",
-    "description": "Wait for user to enter password and complete login",
-    "condition": {
-      "type": "url.contains",
-      "value": "mail.google.com/mail/u/0/#inbox"
-    },
-    "url": "mail.google.com/mail/u/0/#inbox",
-    "timeout": 120
-  },
-  {
-    "type": "click",
-    "target": "Compose Button",
-    "button": "left",
-    "element_selector": {
-      "name": "Compose",
-      "control_type": "Button",
-      "process_name": "chrome"
-    },
-    "coordinate_selector": {
-      "coords": {
-        "x": 754,
-        "y": 1210
-      },
-      "bbox": {
-        "left": 740,
-        "top": 1190,
-        "right": 770,
-        "bottom": 1230
-      }
-    },
-    "description": "Click Compose button to start composing a new email"
   }
 ]
