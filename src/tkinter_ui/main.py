@@ -297,7 +297,7 @@ class UIA_Recorder_UI:
             return
         
         try:
-            while self.recording_process.poll() is None:
+            while self.recording_process and self.recording_process.poll() is None:
                 # Read error output line by line
                 line = self.recording_process.stderr.readline()
                 if line:
@@ -318,7 +318,7 @@ class UIA_Recorder_UI:
             return
         
         try:
-            while self.recording_process.poll() is None:
+            while self.recording_process and self.recording_process.poll() is None:
                 # Read output line by line
                 line = self.recording_process.stdout.readline()
                 if line:
