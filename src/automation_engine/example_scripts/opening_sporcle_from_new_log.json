@@ -1,0 +1,110 @@
+[
+  {
+    "type": "click",
+    "target": "Chrome Profile Picker Window",
+    "button": "left",
+    "element_selector": {
+      "name": "Who's using Chrome?",
+      "control_type": "Document",
+      "process_name": "chrome"
+    },
+    "coordinate_selector": {
+      "coords": {
+        "x": 913,
+        "y": 1477
+      },
+      "bbox": {
+        "left": 900,
+        "top": 1460,
+        "right": 930,
+        "bottom": 1490
+      }
+    },
+    "description": "Click on Chrome profile picker window to activate it"
+  },
+  {
+    "type": "load",
+    "description": "Wait for profile picker to fully load",
+    "condition": {
+      "type": "uia.exists",
+      "value": "Who's using Chrome?"
+    },
+    "timeout": 10
+  },
+  {
+    "type": "click",
+    "target": "Open Old Profile Button",
+    "button": "left",
+    "element_selector": {
+      "name": "Open Old profile",
+      "control_type": "Button",
+      "process_name": "chrome"
+    },
+    "coordinate_selector": {
+      "coords": {
+        "x": 1227,
+        "y": 751
+      },
+      "bbox": {
+        "left": 1200,
+        "top": 730,
+        "right": 1250,
+        "bottom": 770
+      }
+    },
+    "description": "Click the 'Open Old profile' button to open existing Chrome profile"
+  },
+  {
+    "type": "load",
+    "description": "Wait for Chrome profile to load",
+    "condition": {
+      "type": "uia.exists",
+      "value": "Address and search bar"
+    },
+    "timeout": 15
+  },
+  {
+    "type": "click",
+    "target": "Address Bar",
+    "button": "left",
+    "element_selector": {
+      "name": "Address and search bar",
+      "control_type": "Edit",
+      "class_name": "OmniboxViewViews",
+      "process_name": "chrome"
+    },
+    "coordinate_selector": {
+      "coords": {
+        "x": 380,
+        "y": 21
+      },
+      "bbox": {
+        "left": 360,
+        "top": 10,
+        "right": 400,
+        "bottom": 35
+      }
+    },
+    "description": "Click on address bar to focus it for navigation"
+  },
+  {
+    "type": "type_text",
+    "text": "sporcle.com",
+    "description": "Type 'sporcle.com' to navigate to Sporcle"
+  },
+  {
+    "type": "key_press",
+    "key": "Return",
+    "description": "Press Enter to navigate to Sporcle"
+  },
+  {
+    "type": "load",
+    "description": "Wait for Sporcle to load",
+    "condition": {
+      "type": "url.contains",
+      "value": "sporcle.com"
+    },
+    "url": "sporcle.com",
+    "timeout": 30
+  }
+]
