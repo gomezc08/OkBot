@@ -27,7 +27,7 @@ class UIA_Recorder_UI:
         
         # File paths - use the same path that the C# program uses
         self.uia_project_path = Path(__file__).parent.parent / "uia_listener"
-        self.output_path = Path(__file__).parent.parent / "create_json_schema" / "resources" / "uia_log.json"
+        self.output_path = Path(__file__).parent.parent / "create_json_schema" / "resources" / "output_logs" / "log.json"
         
         self.setup_ui()
         
