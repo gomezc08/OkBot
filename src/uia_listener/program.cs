@@ -614,9 +614,9 @@ internal static class Program
         var srcDir = Directory.GetParent(uiaProjectDir ?? string.Empty)?.FullName; // -> .../src
         if (string.IsNullOrEmpty(srcDir))
         {
-            return Path.Combine(baseDir, "resources");
+            return Path.Combine(baseDir, "resources", "output_logs");
         }
-        return Path.Combine(srcDir, "create_json_schema", "resources");
+        return Path.Combine(srcDir, "create_json_schema", "resources", "output_logs");
     }
 
     private class LogEvent

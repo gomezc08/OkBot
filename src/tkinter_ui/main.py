@@ -247,27 +247,13 @@ class UIA_Recorder_UI:
                     actual_count = len(data) if isinstance(data, list) else 0
                     self.preview_text.insert(tk.END, f"✅ UIA listener saved {actual_count} events to log file\n")
                     
-                    # If we have more events than the C# program, merge them
+                    # If we have captured events, overwrite the log file with just our events
                     if len(self.captured_events) > 0:
-                        # Merge events, avoiding duplicates
-                        existing_events = set()
-                        for event in data:
-                            # Create a unique key for each event
-                            key = f"{event.get('EventType', '')}_{event.get('Name', '')}_{event.get('TimestampUtc', '')}"
-                            existing_events.add(key)
-                        
-                        # Add our captured events that aren't duplicates
-                        merged_events = data.copy()
-                        for event in self.captured_events:
-                            key = f"{event.get('EventType', '')}_{event.get('Name', '')}_{event.get('TimestampUtc', '')}"
-                            if key not in existing_events:
-                                merged_events.append(event)
-                        
-                        # Save the merged result
+                        # Overwrite the file with only our captured events (no merging)
                         with open(self.output_path, 'w') as f:
-                            json.dump(merged_events, f, indent=2)
+                            json.dump(self.captured_events, f, indent=2)
                         
-                        self.preview_text.insert(tk.END, f"✅ Merged and saved {len(merged_events)} total events\n")
+                        self.preview_text.insert(tk.END, f"✅ Overwritten log file with {len(self.captured_events)} new events\n")
                     
                     self.preview_text.insert(tk.END, f"📁 Log file location: {self.output_path}\n")
                     
