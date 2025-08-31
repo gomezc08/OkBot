@@ -114,7 +114,7 @@ def main():
     engine = RunAutomationEngine()
     
     # Load and execute the recorded Chrome activity script
-    script_path = Path(__file__).parent / "example_scripts" / "opening_gmail.json"
+    script_path = Path(__file__).parent / "example_scripts" / "opening_sporcle_from_new_log.json"
     
     try:
         with open(script_path, "r") as f:

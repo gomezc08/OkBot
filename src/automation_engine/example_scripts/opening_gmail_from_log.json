@@ -1,0 +1,126 @@
+[
+  {
+    "type": "click",
+    "target": "Chrome Profile Picker Window",
+    "button": "left",
+    "element_selector": {
+      "name": "Who's using Chrome?",
+      "control_type": "Window",
+      "class_name": "Chrome_WidgetWin_1",
+      "process_name": "chrome"
+    },
+    "coordinate_selector": {
+      "coords": {
+        "x": 913,
+        "y": 1477
+      },
+      "bbox": {
+        "left": 900,
+        "top": 1460,
+        "right": 930,
+        "bottom": 1490
+      }
+    },
+    "description": "Click on Chrome profile picker window to activate it"
+  },
+  {
+    "type": "load",
+    "description": "Wait for profile picker to fully load",
+    "condition": {
+      "type": "uia.exists",
+      "value": "Who's using Chrome?"
+    },
+    "timeout": 10
+  },
+  {
+    "type": "click",
+    "target": "Add Profile Button",
+    "button": "left",
+    "element_selector": {
+      "name": "Add",
+      "control_type": "Button",
+      "class_name": "profile-item",
+      "process_name": "chrome"
+    },
+    "coordinate_selector": {
+      "coords": {
+        "x": 1227,
+        "y": 751
+      },
+      "bbox": {
+        "left": 1200,
+        "top": 730,
+        "right": 1250,
+        "bottom": 770
+      }
+    },
+    "description": "Click the Add profile button to create a new Chrome profile"
+  },
+  {
+    "type": "load",
+    "description": "Wait for profile creation dialog to appear",
+    "condition": {
+      "type": "url.is",
+      "value": ""
+    },
+    "timeout": 15
+  },
+  {
+    "type": "click",
+    "target": "Gmail Link",
+    "button": "left",
+    "element_selector": {
+      "name": "Gmail ",
+      "control_type": "Hyperlink",
+      "class_name": "gb_X",
+      "process_name": "chrome"
+    },
+    "coordinate_selector": {
+      "coords": {
+        "x": 1872,
+        "y": 239
+      },
+      "bbox": {
+        "left": 1860,
+        "top": 220,
+        "right": 1890,
+        "bottom": 260
+      }
+    },
+    "description": "Click on Gmail link in Chrome to navigate to Gmail"
+  },
+  {
+    "type": "load",
+    "description": "Wait for Gmail to load",
+    "condition": {
+      "type": "url.contains",
+      "value": "mail.google.com"
+    },
+    "url": "mail.google.com",
+    "timeout": 25
+  },
+  {
+    "type": "click",
+    "target": "Address Bar",
+    "button": "left",
+    "element_selector": {
+      "name": "Address and search bar",
+      "control_type": "Edit",
+      "class_name": "OmniboxViewViews",
+      "process_name": "chrome"
+    },
+    "coordinate_selector": {
+      "coords": {
+        "x": 380,
+        "y": 21
+      },
+      "bbox": {
+        "left": 360,
+        "top": 10,
+        "right": 400,
+        "bottom": 35
+      }
+    },
+    "description": "Click on address bar to focus it for navigation"
+  }
+]
